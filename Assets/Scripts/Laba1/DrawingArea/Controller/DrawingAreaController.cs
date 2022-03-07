@@ -9,6 +9,7 @@ namespace Laba1.DrawingArea.Controller
     public class DrawingAreaController : MonoBehaviour
     {
         private const float MIN_DISTANCE_VERTEX = 150f;
+        private const float MIN_DISTANCE_ARC = 50f;
         private const float MIN_DISTANCE_CLICK = 25f;
         
         [SerializeField] 
@@ -75,13 +76,27 @@ namespace Laba1.DrawingArea.Controller
                 foreach (Vertex vertex in _vertexes)
                 {
                     Vector2 vertexPosition = new Vector2(vertex.X, vertex.Y);
-                    if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(vertexPosition, mousePosition,
-                        MIN_DISTANCE_CLICK))
+                    if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(vertexPosition, mousePosition, MIN_DISTANCE_CLICK))
                     {
                         continue;
                     }
                     
                     DeleteVertex(vertex);
+                    return;
+                }
+            }
+
+            if (Input.GetKey(KeyCode.LeftShift))
+            {
+                Vector2 mousePosition = Input.mousePosition;
+                foreach (Arc arc in _arcs)
+                {
+                    if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(arc.transform.position,mousePosition,MIN_DISTANCE_ARC))
+                    {
+                        continue;
+                    }
+                    
+                    DeleteArc(arc);
                     return;
                 }
             }
@@ -102,7 +117,13 @@ namespace Laba1.DrawingArea.Controller
                 endPosition
             };
             List<Vertex> arcVertexes = FindArcVertexes(positions);
-
+            
+            if (arcVertexes[0] == null || arcVertexes[1] == null || HasSuchArc(arcVertexes))
+            {
+                Destroy(arc);
+                return;
+            }
+            
             SetArcParameters(arc, arcComponent, positions, arcVertexes);
             _arcs.Add(arcComponent);
         }
@@ -130,12 +151,6 @@ namespace Laba1.DrawingArea.Controller
             RectTransform rectTransform = arc.GetComponent<RectTransform>();
             Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
             double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
-
-            if (vertices[0] == null || vertices[1] == null)
-            {
-                Destroy(arc);
-                return;
-            }
             
             List<Vector2> positionFromSize = new List<Vector2>();
             positionFromSize.Add(new Vector2(vertices[0].X, vertices[0].Y));
@@ -153,7 +168,7 @@ namespace Laba1.DrawingArea.Controller
                 eulerAngles.z + (float)newAngle
             );
             
-            arc.name = $"arc{_arcs.Count + 1}";
+            arc.name = $"arc{vertices[0].Name}{vertices[1].Name}";
             arcComponent.Init(vertices[0], vertices[1]);
         }
 
@@ -170,6 +185,29 @@ namespace Laba1.DrawingArea.Controller
         {
             _vertexes.Remove(vertex);
             Destroy(vertex.gameObject);
+        }
+
+        private void DeleteArc(Arc arc)
+        {
+            _arcs.Remove(arc);
+            Destroy(arc.gameObject);
+        }
+
+        private bool HasSuchArc(List<Vertex> vertices)
+        {
+            foreach (Arc arc in _arcs)
+            {
+                if(arc.FirstVertex == vertices[0] && arc.SecondVertex == vertices[1])
+                {
+                    return true;
+                }
+                if (arc.FirstVertex == vertices[1] && arc.SecondVertex == vertices[0])
+                {
+                    return true;
+                }
+            }
+            
+            return false;
         }
 
         private List<Vertex> FindArcVertexes(List<Vector2> positions)
