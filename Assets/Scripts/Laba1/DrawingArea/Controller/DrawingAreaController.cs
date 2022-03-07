@@ -9,9 +9,7 @@ namespace Laba1.DrawingArea.Controller
     public class DrawingAreaController : MonoBehaviour
     {
         private const float MIN_DISTANCE_VERTEX = 150f;
-        private const float MIN_DISTANCE_CLICK = 15f;
-        private const float SIZE_ARC_COEFFICIENT = 1.25f;
-        private const float SIZE_ARC_FAULT = 70f;
+        private const float MIN_DISTANCE_CLICK = 25f;
         
         [SerializeField] 
         private GameObject _vertex;
@@ -143,7 +141,7 @@ namespace Laba1.DrawingArea.Controller
             positionFromSize.Add(new Vector2(vertices[0].X, vertices[0].Y));
             positionFromSize.Add(new Vector2(vertices[1].X, vertices[1].Y));
             
-            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize, SIZE_ARC_COEFFICIENT, SIZE_ARC_FAULT);
+            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize);
             
             arc.transform.position = new Vector2(newPosition.x, newPosition.y);
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);

@@ -18,12 +18,12 @@ namespace Laba1.Maths
             return result;
         }
         
-        public int CalculateNewObjectSize(List<Vector2> positions, float coefficient, float fault)
+        public int CalculateNewObjectSize(List<Vector2> positions)
         {
             Vector2 vectorDifference = CalculateVectorsDifference(positions);
             double length = Math.Sqrt(Math.Pow(vectorDifference.x, 2) + Math.Pow(vectorDifference.y, 2));
 
-            return (int)((float) length * coefficient - fault);
+            return (int) length;
         }
         
         public double CalculateNewObjectAngle(List<Vector2> positions)
