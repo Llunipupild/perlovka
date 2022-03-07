@@ -10,8 +10,8 @@ namespace Laba1.DrawingArea.Controller
     {
         private const float MIN_DISTANCE_VERTEX = 150f;
         private const float MIN_DISTANCE_CLICK = 15f;
-        private const float SIZE_ARC_COEFFICIENT = 1.3f;
-        private const float SIZE_ARC_FAULT = 80;
+        private const float SIZE_ARC_COEFFICIENT = 1.25f;
+        private const float SIZE_ARC_FAULT = 70f;
         
         [SerializeField] 
         private GameObject _vertex;
@@ -103,8 +103,9 @@ namespace Laba1.DrawingArea.Controller
                 startPosition, 
                 endPosition
             };
+            List<Vertex> arcVertexes = FindArcVertexes(positions);
 
-            SetArcParameters(arc, arcComponent, positions);
+            SetArcParameters(arc, arcComponent, positions, arcVertexes);
             _arcs.Add(arcComponent);
         }
         
@@ -126,12 +127,23 @@ namespace Laba1.DrawingArea.Controller
             _vertexes.Add(vertexComponent);
         }
 
-        private void SetArcParameters(GameObject arc, Arc arcComponent, List<Vector2> positions)
+        private void SetArcParameters(GameObject arc, Arc arcComponent, List<Vector2> positions, List<Vertex> vertices)
         {
             RectTransform rectTransform = arc.GetComponent<RectTransform>();
             Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
             double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
-            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positions, SIZE_ARC_COEFFICIENT, SIZE_ARC_FAULT);
+
+            if (vertices[0] == null || vertices[1] == null)
+            {
+                Destroy(arc);
+                return;
+            }
+            
+            List<Vector2> positionFromSize = new List<Vector2>();
+            positionFromSize.Add(new Vector2(vertices[0].X, vertices[0].Y));
+            positionFromSize.Add(new Vector2(vertices[1].X, vertices[1].Y));
+            
+            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize, SIZE_ARC_COEFFICIENT, SIZE_ARC_FAULT);
             
             arc.transform.position = new Vector2(newPosition.x, newPosition.y);
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);
@@ -144,7 +156,7 @@ namespace Laba1.DrawingArea.Controller
             );
             
             arc.name = $"arc{_arcs.Count + 1}";
-            //arcComponent.Init();
+            arcComponent.Init(vertices[0], vertices[1]);
         }
 
         private void SetVertexParameters(GameObject vertex, Vertex vertexComponent, Vector3 position)
@@ -160,6 +172,34 @@ namespace Laba1.DrawingArea.Controller
         {
             _vertexes.Remove(vertex);
             Destroy(vertex.gameObject);
+        }
+
+        private List<Vertex> FindArcVertexes(List<Vector2> positions)
+        {
+            List<Vertex> result = new List<Vertex>();
+            result.Add(GetNearestVertex(positions[0]));
+            result.Add(GetNearestVertex(positions[1]));
+
+            return result;
+        }
+
+        private Vertex GetNearestVertex(Vector2 position)
+        {
+            Vertex result = null;
+            foreach (Vertex vertex in _vertexes)
+            {
+                Vector2 vertexPosition = new Vector2(vertex.X, vertex.Y);
+                if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(vertexPosition, position,
+                    MIN_DISTANCE_CLICK))
+                {
+                    continue;
+                }
+
+                result = vertex;
+                break;
+            }
+
+            return result;
         }
         
         private GameObject CreateObject(GameObject obj, Transform parent)
