@@ -1,5 +1,5 @@
-﻿using System;
-using Laba1.DrawingArea.Controller;
+﻿using Laba1.DrawingArea.Controller;
+using Laba1.Maths;
 using Laba1.Table.Controller;
 using UnityEngine;
 using UnityEngine.UI;
@@ -45,9 +45,10 @@ namespace Laba1.App.Service
             GameObject mainDialog = Instantiate(_mainDialog, _canvas.transform);
             TableController tableController = mainDialog.GetComponent<TableController>();
             DrawingAreaController drawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
+            MathematicalCalculations mathematicalCalculations = new MathematicalCalculations();
             
             tableController.Init(countVertex);
-            drawingAreaController.Init(countVertex);
+            drawingAreaController.Init(countVertex, mathematicalCalculations);
         }
     }
 }

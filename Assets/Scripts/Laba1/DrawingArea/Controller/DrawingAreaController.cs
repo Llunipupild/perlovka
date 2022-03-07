@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using Laba1.Arcs.Model;
 using Laba1.Maths;
 using Laba1.Vertexes.Model;
@@ -10,10 +8,10 @@ namespace Laba1.DrawingArea.Controller
 {
     public class DrawingAreaController : MonoBehaviour
     {
-        private const float MIN_DISTANCE_VERTEX = 15f;
-        private const float MIN_DISTANCE_CLICK = 10f;
-        private const float SIZE_ARC_COEFFICIENT = 1.2f;
-        private const float SIZE_ARC_FAULT = 75;
+        private const float MIN_DISTANCE_VERTEX = 150f;
+        private const float MIN_DISTANCE_CLICK = 15f;
+        private const float SIZE_ARC_COEFFICIENT = 1.3f;
+        private const float SIZE_ARC_FAULT = 80;
         
         [SerializeField] 
         private GameObject _vertex;
@@ -34,23 +32,27 @@ namespace Laba1.DrawingArea.Controller
         private bool _isCreateArc;
         private int _countVertex;
         
-        public void Init(int countVertex)
+        public void Init(int countVertex, MathematicalCalculations mathematicalCalculations)
         {
             _countVertex = countVertex;
-            _mathematicalCalculations = new MathematicalCalculations();
+            _mathematicalCalculations = mathematicalCalculations;
         }
         
         private void Update()
         {
             if (Input.GetMouseButtonDown(0))
             {
-                Vector2 position = Input.mousePosition;
-                if (!_vertexes.Any(vertex => Math.Abs(vertex.X - position.x) < MIN_DISTANCE_CLICK && 
-                                             Math.Abs(vertex.Y - position.y) < MIN_DISTANCE_CLICK))
+                Vector2 mousePosition = Input.mousePosition;
+                foreach (Vertex vertex in _vertexes)
                 {
-                    AddVertex(position);
+                    Vector2 vertexPosition = new Vector2(vertex.X, vertex.Y);
+                    if (_mathematicalCalculations.CheckDistanceBetweenEachOther(vertexPosition, mousePosition, MIN_DISTANCE_VERTEX))
+                    {
+                        return;
+                    }
                 }
                 
+                AddVertex(mousePosition);
                 return;
             }
             
@@ -71,11 +73,18 @@ namespace Laba1.DrawingArea.Controller
             
             if (Input.GetMouseButtonUp(1))
             {
-                Vertex vertex = _vertexes.FirstOrDefault(v => Math.Abs(v.X - Input.mousePosition.x) < MIN_DISTANCE_CLICK && 
-                                                                   Math.Abs(v.Y - Input.mousePosition.y) < MIN_DISTANCE_CLICK);
-                if (vertex != null)
+                Vector2 mousePosition = Input.mousePosition;
+                foreach (Vertex vertex in _vertexes)
                 {
+                    Vector2 vertexPosition = new Vector2(vertex.X, vertex.Y);
+                    if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(vertexPosition, mousePosition,
+                        MIN_DISTANCE_CLICK))
+                    {
+                        continue;
+                    }
+                    
                     DeleteVertex(vertex);
+                    return;
                 }
             }
         }
@@ -105,11 +114,7 @@ namespace Laba1.DrawingArea.Controller
             {
                 return;
             }
-            if (!CheckPositionCorrections(position))
-            {
-                return;
-            }
-            if (!CheckMinVertexesDistance(position))
+            if (!_mathematicalCalculations.CheckPositionCorrections(position))
             {
                 return;
             }
@@ -124,25 +129,18 @@ namespace Laba1.DrawingArea.Controller
         private void SetArcParameters(GameObject arc, Arc arcComponent, List<Vector2> positions)
         {
             RectTransform rectTransform = arc.GetComponent<RectTransform>();
+            Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
+            double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
+            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positions, SIZE_ARC_COEFFICIENT, SIZE_ARC_FAULT);
             
-            Vector2 startPosition = positions[0];
-            Vector2 endPosition = positions[1];
-            
-            float diffX = endPosition.x - startPosition.x;
-            float diffY = endPosition.y - startPosition.y;
-            float centerX = diffX / 2;
-            float centerY = diffY / 2; 
-            double length = Math.Sqrt(Math.Pow(diffX, 2) + Math.Pow(diffY, 2));
-            double angle = Math.Atan2(diffX, diffY) * -180 / Math.PI;
-            
-            arc.transform.position = new Vector2(startPosition.x + centerX, startPosition.y + centerY);
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (int)((float)length * SIZE_ARC_COEFFICIENT) - SIZE_ARC_FAULT);
+            arc.transform.position = new Vector2(newPosition.x, newPosition.y);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);
             
             Vector3 eulerAngles = arc.transform.eulerAngles;
             arc.transform.localEulerAngles = new Vector3(
                 eulerAngles.x,
                 eulerAngles.y, 
-                eulerAngles.z + (float)angle
+                eulerAngles.z + (float)newAngle
             );
             
             arc.name = $"arc{_arcs.Count + 1}";
@@ -164,25 +162,6 @@ namespace Laba1.DrawingArea.Controller
             Destroy(vertex.gameObject);
         }
         
-        private bool CheckMinVertexesDistance(Vector2 position)
-        {
-            foreach (Vertex vertex in _vertexes)
-            {
-                if (Math.Abs(vertex.X - position.x) < MIN_DISTANCE_VERTEX && 
-                    Math.Abs(vertex.Y - position.y) < MIN_DISTANCE_VERTEX)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-        
-        private bool CheckPositionCorrections(Vector2 position)
-        {
-            return position.x > Screen.width * 0.45f;
-        }
-
         private GameObject CreateObject(GameObject obj, Transform parent)
         {
             return Instantiate(obj, parent);
