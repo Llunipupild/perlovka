@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 7322906781366131730}
   - component: {fileID: 4592312841137904117}
   m_Layer: 5
-  m_Name: vertex
+  m_Name: pfVertex
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

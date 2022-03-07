@@ -1,4 +1,4 @@
-﻿using Laba1.Vertexs.Model;
+﻿using Laba1.Vertexes.Model;
 using UnityEngine;
 
 namespace Laba1.Arcs.Model

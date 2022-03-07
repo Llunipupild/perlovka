@@ -2,19 +2,19 @@
 using Laba1.Arcs.Model;
 using UnityEngine;
 
-namespace Laba1.Vertexs.Model
+namespace Laba1.Vertexes.Model
 {
     public class Vertex : MonoBehaviour
     {
-        public string Name { get; set; }
-        public float X { get; set; }
-        public float Y { get; set; }
+        private readonly List<Arc> _arcs = new List<Arc>();
+        private readonly List<Vertex> _adjacentVertices = new List<Vertex>();
+        
+        public string Name { get; private set; }
+        public float X { get; private set; }
+        public float Y { get; private set; }
 
         public List<Vertex> AdjacentVertices => _adjacentVertices;
         public List<Arc> Arcs => _arcs;
-
-        private List<Arc> _arcs = new List<Arc>();
-        private List<Vertex> _adjacentVertices = new List<Vertex>();
         
         public void Init(string vertexName, Vector2 position)
         {
@@ -38,7 +38,7 @@ namespace Laba1.Vertexs.Model
             _arcs.Add(arc);
         }
         
-        public void Removearc(Arc arc)
+        public void RemoveArc(Arc arc)
         {
             _arcs.Remove(arc);
         }

@@ -1,56 +1,52 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Laba1.App.Service;
 using Laba1.Arcs.Model;
-using Laba1.Vertexs.Model;
+using Laba1.Maths;
+using Laba1.Vertexes.Model;
 using UnityEngine;
 
 namespace Laba1.DrawingArea.Controller
 {
     public class DrawingAreaController : MonoBehaviour
     {
-        private const float MIN_DISTANCE_VERTEX = 10;
-        private const float TOLERANCE = 10f;
+        private const float MIN_DISTANCE_VERTEX = 15f;
+        private const float MIN_DISTANCE_CLICK = 10f;
+        private const float SIZE_ARC_COEFFICIENT = 1.2f;
+        private const float SIZE_ARC_FAULT = 75;
         
         [SerializeField] 
         private GameObject _vertex;
         [SerializeField] 
         private GameObject _arc;
+        [SerializeField]
+        private Transform _arcsContainer;
+        [SerializeField]
+        private Transform _vertexContainer;
 
-        private List<Vertex> _vertices = new List<Vertex>();
+        private MathematicalCalculations _mathematicalCalculations;
+        private List<Vertex> _vertexes = new List<Vertex>();
         private List<Arc> _arcs = new List<Arc>();
-        private Canvas _canvas;
         
-        public AppService _appService;
+        private Vector2 _startPositionNewArc;
+        private Vector2 _endPositionNewArc;
         
-        public int _countVertex;
-
-        private void Start()
+        private bool _isCreateArc;
+        private int _countVertex;
+        
+        public void Init(int countVertex)
         {
-            _canvas = _appService.Canvas.GetComponent<Canvas>();
+            _countVertex = countVertex;
+            _mathematicalCalculations = new MathematicalCalculations();
         }
-
-        // private void OnDrawGizmosSelected()
-        // {
-        //     Gizmos.DrawRay(new Ray(position, Vector3.forward));
-        // }
-        //
-        // private void OnDrawGizmos()
-        // {
-        //     
-        // }
-
+        
         private void Update()
         {
-            if (Input.GetMouseButtonUp(0))
+            if (Input.GetMouseButtonDown(0))
             {
                 Vector2 position = Input.mousePosition;
-                if (_vertices.Any(vertex => Math.Abs(vertex.X - position.x) < TOLERANCE && Math.Abs(vertex.Y - position.y) < TOLERANCE))
-                {
-                    AddArc(position);
-                }
-                else
+                if (!_vertexes.Any(vertex => Math.Abs(vertex.X - position.x) < MIN_DISTANCE_CLICK && 
+                                             Math.Abs(vertex.Y - position.y) < MIN_DISTANCE_CLICK))
                 {
                     AddVertex(position);
                 }
@@ -58,11 +54,25 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
             
-            //удаление ещё подумать
+            if (Input.GetKey(KeyCode.Space) && !_isCreateArc)
+            {
+                _isCreateArc = true;
+                _startPositionNewArc = Input.mousePosition;
+                return;
+            }
+
+            if (!Input.GetKey(KeyCode.Space) && _isCreateArc)
+            {
+                _isCreateArc = false;
+                _endPositionNewArc = Input.mousePosition;
+                AddArc(_startPositionNewArc, _endPositionNewArc);
+                return;
+            }
+            
             if (Input.GetMouseButtonUp(1))
             {
-                Vertex vertex = _vertices.FirstOrDefault(v => Math.Abs(v.X - Input.mousePosition.x) < TOLERANCE 
-                                                               && Math.Abs(v.Y - Input.mousePosition.y) < TOLERANCE);
+                Vertex vertex = _vertexes.FirstOrDefault(v => Math.Abs(v.X - Input.mousePosition.x) < MIN_DISTANCE_CLICK && 
+                                                                   Math.Abs(v.Y - Input.mousePosition.y) < MIN_DISTANCE_CLICK);
                 if (vertex != null)
                 {
                     DeleteVertex(vertex);
@@ -70,56 +80,112 @@ namespace Laba1.DrawingArea.Controller
             }
         }
 
-        private void AddArc(Vector2 position)
+        private void AddArc(Vector2 startPosition, Vector2 endPosition)
         {
-           //  Gizmos.color = Color.blue;
-           // // Gizmos.DrawLine(position);
-           //  Gizmos.DrawRay(new Ray(position, Vector3.forward));
-           
-           
-           
-           // public LineRenderer line = FindObjectOfType<LineRenderer>();
-           // Vector3 vec1 = new Vector3(0,0,0);
-           // Vector3 vec2 = new Vector3(1,1,1);//координаты точек
-           // line.setPosition(0, vec1)//0-начальная точка линии
-           // line.setPosition(1, vec2)//1-конечная точка линии
-           
+            if (_arcs.Count >= _countVertex * 2)
+            {
+                return;
+            }
+            
+            GameObject arc = CreateObject(_arc, _arcsContainer);
+            Arc arcComponent = arc.GetComponent<Arc>();
+            List<Vector2> positions = new List<Vector2>
+            {
+                startPosition, 
+                endPosition
+            };
+
+            SetArcParameters(arc, arcComponent, positions);
+            _arcs.Add(arcComponent);
         }
         
         private void AddVertex(Vector2 position)
         {
-            if (_vertices.Count == _countVertex)
+            if (_vertexes.Count == _countVertex)
             {
                 return;
             }
-
             if (!CheckPositionCorrections(position))
             {
                 return;
             }
-            
-            //MIN_DISTANCE_VERTEX учитывать 
-            
-            GameObject vertex = Instantiate(_vertex, _canvas.transform);
+            if (!CheckMinVertexesDistance(position))
+            {
+                return;
+            }
+
+            GameObject vertex = CreateObject(_vertex, _vertexContainer);
             Vertex vertexComponent = vertex.GetComponent<Vertex>();
+
+            SetVertexParameters(vertex, vertexComponent, position);
+            _vertexes.Add(vertexComponent);
+        }
+
+        private void SetArcParameters(GameObject arc, Arc arcComponent, List<Vector2> positions)
+        {
+            RectTransform rectTransform = arc.GetComponent<RectTransform>();
             
-            string vertexName = $"x{_vertices.Count + 1}";
+            Vector2 startPosition = positions[0];
+            Vector2 endPosition = positions[1];
+            
+            float diffX = endPosition.x - startPosition.x;
+            float diffY = endPosition.y - startPosition.y;
+            float centerX = diffX / 2;
+            float centerY = diffY / 2; 
+            double length = Math.Sqrt(Math.Pow(diffX, 2) + Math.Pow(diffY, 2));
+            double angle = Math.Atan2(diffX, diffY) * -180 / Math.PI;
+            
+            arc.transform.position = new Vector2(startPosition.x + centerX, startPosition.y + centerY);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, (int)((float)length * SIZE_ARC_COEFFICIENT) - SIZE_ARC_FAULT);
+            
+            Vector3 eulerAngles = arc.transform.eulerAngles;
+            arc.transform.localEulerAngles = new Vector3(
+                eulerAngles.x,
+                eulerAngles.y, 
+                eulerAngles.z + (float)angle
+            );
+            
+            arc.name = $"arc{_arcs.Count + 1}";
+            //arcComponent.Init();
+        }
+
+        private void SetVertexParameters(GameObject vertex, Vertex vertexComponent, Vector3 position)
+        {
+            string vertexName = $"x{_vertexes.Count + 1}";
             vertex.transform.position = position;
-            vertexComponent.Init(vertexName,position);
             vertex.name = vertexName;
             
-            _vertices.Add(vertexComponent);
+            vertexComponent.Init(vertexName,position);
         }
         
         private void DeleteVertex(Vertex vertex)
         {
-            _vertices.Remove(vertex);
+            _vertexes.Remove(vertex);
             Destroy(vertex.gameObject);
+        }
+        
+        private bool CheckMinVertexesDistance(Vector2 position)
+        {
+            foreach (Vertex vertex in _vertexes)
+            {
+                if (Math.Abs(vertex.X - position.x) < MIN_DISTANCE_VERTEX && 
+                    Math.Abs(vertex.Y - position.y) < MIN_DISTANCE_VERTEX)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
         
         private bool CheckPositionCorrections(Vector2 position)
         {
             return position.x > Screen.width * 0.45f;
+        }
+
+        private GameObject CreateObject(GameObject obj, Transform parent)
+        {
+            return Instantiate(obj, parent);
         }
     }
 }

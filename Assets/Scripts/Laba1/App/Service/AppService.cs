@@ -1,4 +1,5 @@
-﻿using Laba1.DrawingArea.Controller;
+﻿using System;
+using Laba1.DrawingArea.Controller;
 using Laba1.Table.Controller;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,11 +16,6 @@ namespace Laba1.App.Service
         private GameObject _mainDialog;
         [SerializeField]
         private InputField _inputField;
-
-        public GameObject Canvas
-        {
-            get => _canvas;
-        }
         
         private void Start()
         {
@@ -28,8 +24,16 @@ namespace Laba1.App.Service
         
         private void StartApp(string arg)
         {
-            int countVertex = int.Parse(_inputField.text);
-            if (countVertex >= 11 || countVertex <= 1) return;
+            int countVertex = 0;
+            
+            if (_inputField.text != string.Empty)
+            {
+                countVertex = int.Parse(_inputField.text);
+            }
+            if (countVertex >= 11 || countVertex <= 1)
+            {
+                return;
+            }
             
             _inputField.text = string.Empty;
             _startDialog.SetActive(false);
@@ -38,14 +42,12 @@ namespace Laba1.App.Service
 
         private void CreateMainDialog(int countVertex)
         {
-            GameObject temp = Instantiate(_mainDialog, _canvas.transform);
-            TableController tableController = temp.GetComponent<TableController>();
-            DrawingAreaController drawingAreaController = temp.GetComponent<DrawingAreaController>();
+            GameObject mainDialog = Instantiate(_mainDialog, _canvas.transform);
+            TableController tableController = mainDialog.GetComponent<TableController>();
+            DrawingAreaController drawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
             
-            tableController._appService = this;
-            tableController._countVertex = countVertex;
-            drawingAreaController._appService = this;
-            drawingAreaController._countVertex = countVertex;
+            tableController.Init(countVertex);
+            drawingAreaController.Init(countVertex);
         }
     }
 }

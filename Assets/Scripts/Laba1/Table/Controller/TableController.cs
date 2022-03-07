@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Laba1.App.Service;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -21,28 +20,27 @@ namespace Laba1.Table.Controller
         [SerializeField] 
         private GameObject _title;
         [SerializeField]
-        private GameObject _upX;
+        private GameObject _upTitle;
         [SerializeField]
-        private GameObject _leftX;
+        private GameObject _leftTitle;
         [SerializeField]
         private GameObject _cell;
         [SerializeField]
         private GameObject _inputField;
 
-//todo проверить минус
+        private int _countVertex;
         public Dictionary<string,InputField> InputFields { get; private set;}
         
-        public AppService _appService;
-        public int _countVertex;
-
-        private void Start()
+        public void Init(int countVertex)
         {
+            _countVertex = countVertex;
             InputFields = new Dictionary<string, InputField>();
-            CreateEntity(START_UP_X_POSITION,BASE_DISTANCE,_upX,_title.transform);
-            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20,_leftX,_column.transform, false, false);
+            
+            CreateEntity(START_UP_X_POSITION,BASE_DISTANCE,_upTitle,_title.transform);
+            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20,_leftTitle,_column.transform, false, false);
             CreateEntity(START_CELL_POSITION,BASE_DISTANCE +20,_cell,_table.transform,false,false, true);
         }
-
+        
         private void CreateEntity(float startPosition, float distance, GameObject entity, Transform parent, bool plus = true, bool X = true, bool isCell = false)
         {
             float value = startPosition;
