@@ -13,7 +13,7 @@ namespace Laba1.DrawingArea.Controller
     public class DrawingAreaController : MonoBehaviour
     {
         private const float MIN_DISTANCE_VERTEX = 250f;
-        private const float MIN_DISTANCE_ARC = 120f;
+        private const float MIN_DISTANCE_ARC = 80f;
         private const float MIN_DISTANCE_CLICK = 50f;
         
         [SerializeField] 
@@ -35,8 +35,8 @@ namespace Laba1.DrawingArea.Controller
         private Arc _selectedArc;
         private InputField _inputField;
         
-        private List<Vertex> _vertexes = new List<Vertex>();
-        private List<Arc> _arcs = new List<Arc>();
+        public List<Vertex> _vertexes = new List<Vertex>();
+        public List<Arc> _arcs = new List<Arc>();
         
         private Vector2 _startPositionNewArc;
         private Vector2 _endPositionNewArc;
@@ -164,7 +164,7 @@ namespace Laba1.DrawingArea.Controller
             UnlockDrawingAreaAndTable();
         }
         
-        private void AddArc(Vector2 startPosition, Vector2 endPosition)
+        public void AddArc(Vector2 startPosition, Vector2 endPosition, string vertexName1 = null, string vertexName2 = null)
         {
             if (_arcs.Count >= _countVertex * 2)
             {
@@ -182,8 +182,21 @@ namespace Laba1.DrawingArea.Controller
             
             if (arcVertexes[0] == null || arcVertexes[1] == null || HasSuchArc(arcVertexes))
             {
-                Destroy(arc);
-                return;
+                if (vertexName1 == null && vertexName2 == null)
+                {
+                    Destroy(arc);
+                    return;
+                }
+                
+                arcVertexes.Clear();
+                Vertex vertex1 = _vertexes.First(v => v.Name == vertexName1);
+                arcVertexes.Add(vertex1);
+                Vertex vertex2 = _vertexes.First(v => v.Name == vertexName2);
+                arcVertexes.Add(vertex2);
+                
+                positions.Clear();
+                positions.Add(new Vector2(vertex1.X,vertex1.Y));
+                positions.Add(new Vector2(vertex2.X, vertex2.Y));
             }
             
             SetArcVertices(arcVertexes, arcComponent);
@@ -236,7 +249,7 @@ namespace Laba1.DrawingArea.Controller
             Destroy(arc.gameObject);
         }
         
-        private void AddVertex(Vector2 position)
+        public void AddVertex(Vector2 position, string vertexName = null)
         {
             if (_vertexes.Count == _countVertex)
             {
@@ -250,17 +263,21 @@ namespace Laba1.DrawingArea.Controller
             {
                 return;
             }
+            if (_vertexes.Exists(v => v.Name == vertexName))
+            {
+                return;
+            }
 
             GameObject vertex = CreateObject(_vertex, _vertexContainer);
             Vertex vertexComponent = vertex.GetComponent<Vertex>();
 
-            SetVertexParameters(vertex, vertexComponent, position);
+            SetVertexParameters(vertex, vertexComponent, position, vertexName);
             _vertexes.Add(vertexComponent);
         }
 
-        private void SetVertexParameters(GameObject vertex, Vertex vertexComponent, Vector3 position)
+        private void SetVertexParameters(GameObject vertex, Vertex vertexComponent, Vector3 position, string vertName = null)
         {
-            string vertexName = GetFreeName();
+            string vertexName = vertName ?? GetFreeName();
             _vertexesName[vertexName] = true;
             vertex.transform.position = position;
             vertex.name = vertexName;
@@ -311,16 +328,7 @@ namespace Laba1.DrawingArea.Controller
             
             return false;
         }
-
-        private List<Vertex> FindArcVertexes(List<Vector2> positions)
-        {
-            List<Vertex> result = new List<Vertex>();
-            result.Add(GetNearestVertex(positions[0]));
-            result.Add(GetNearestVertex(positions[1]));
-
-            return result;
-        }
-
+        
         private Vertex GetNearestVertex(Vector2 position)
         {
             Vertex result = null;
@@ -336,6 +344,15 @@ namespace Laba1.DrawingArea.Controller
                 result = vertex;
                 break;
             }
+
+            return result;
+        }
+        
+        private List<Vertex> FindArcVertexes(List<Vector2> positions)
+        {
+            List<Vertex> result = new List<Vertex>();
+            result.Add(GetNearestVertex(positions[0]));
+            result.Add(GetNearestVertex(positions[1]));
 
             return result;
         }

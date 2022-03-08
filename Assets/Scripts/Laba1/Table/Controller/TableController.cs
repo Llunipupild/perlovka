@@ -58,6 +58,14 @@ namespace Laba1.Table.Controller
             string inputFieldsKey1 = $"{arc.FirstVertex.Name}_{arc.SecondVertex.Name}";
             string inputFieldsKey2 = $"{arc.SecondVertex.Name}_{arc.FirstVertex.Name}";
             
+            TableCell tableCell1 = InputFields[inputFieldsKey1].GetComponentInParent<TableCell>();
+            TableCell tableCell2 = InputFields[inputFieldsKey2].GetComponentInParent<TableCell>();
+
+            tableCell1.PreviousValue = tableCell1.CurrentValue;
+            tableCell1.CurrentValue = arcWeight;
+            tableCell2.PreviousValue = tableCell2.CurrentValue;
+            tableCell2.CurrentValue = arcWeight;
+            
             InputFields[inputFieldsKey1].text = arcWeight;
             InputFields[inputFieldsKey2].text = arcWeight;
         }
@@ -90,14 +98,14 @@ namespace Laba1.Table.Controller
                 float inputFieldX = START_INPUT_FIELD_POSITION;
                 for (int j = 1; j < _countVertex+1; j++)
                 {
-                    GameObject inputField = Instantiate(_inputField, temp.transform);
                     string inputFieldKey = $"x{i}_x{j}";
+                    GameObject inputField = Instantiate(_inputField, temp.transform);
                     inputField.AddComponent<TableCell>().Init(inputFieldKey, "");
                     RectTransform rect = inputField.GetComponent<RectTransform>();
                     inputFieldX += BASE_DISTANCE;
                         
                     InputField inputFieldComponent = inputField.GetComponentInChildren<InputField>();
-                    inputFieldComponent.onValueChanged.AddListener(OnChangeTable);
+                    inputFieldComponent.onEndEdit.AddListener(OnChangeTable);
                     inputFieldComponent.placeholder.GetComponent<Text>().text = $"x{j}";
                     rect.anchoredPosition = SetNewPosition(rect, inputFieldX);
                     
@@ -113,13 +121,86 @@ namespace Laba1.Table.Controller
 
         private void OnChangeTable(string text)
         {
-            List<InputField> inputFields = new List<InputField>();
             foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
             {
-                
+                TableCell tableCell = keyValuePair.Value.GetComponentInParent<TableCell>();
+                string secondKey = ReverseKey(tableCell.Key);
+
+                if (keyValuePair.Value.text == tableCell.CurrentValue)
+                {
+                    continue;
+                }
+
+                if (keyValuePair.Value.text != InputFields[secondKey].text)
+                {
+                    if (keyValuePair.Value.text == tableCell.PreviousValue)
+                    {
+                        Vector2 vertex1 = GetRandomPosition();
+                        Vector2 vertex2 = GetRandomPosition();
+                        string key1 = GetHalfString(keyValuePair.Key);
+                        string key2 = GetHalfString(secondKey);
+                        
+                        if (_drawingAreaController._vertexes.Exists(v => v.Name == key1) ||
+                            _drawingAreaController._vertexes.Exists(v => v.Name == key2))
+                        {
+                            _drawingAreaController.AddArc(vertex1, vertex2,key1,key2);
+                        }
+                        else
+                        {
+                            _drawingAreaController.AddVertex(vertex1, key1);
+                            _drawingAreaController.AddVertex(vertex2, key2);
+                            _drawingAreaController.AddArc(vertex1, vertex2);
+                        }
+                        
+                        tableCell.PreviousValue = InputFields[secondKey].text;
+                        keyValuePair.Value.text = InputFields[secondKey].text;
+                        return;
+                    }
+                    if (InputFields[secondKey].text == tableCell.PreviousValue)
+                    {
+                        Vector2 vertex1 = GetRandomPosition();
+                        Vector2 vertex2 = GetRandomPosition();
+                        string key1 = GetHalfString(secondKey);
+                        string key2 = GetHalfString(keyValuePair.Key);
+
+                        if (!_drawingAreaController._vertexes.Exists(v => v.Name == key1) &&
+                            !_drawingAreaController._vertexes.Exists(v => v.Name == key2))
+                        {
+                            _drawingAreaController.AddVertex(vertex1, key1);
+                            _drawingAreaController.AddVertex(vertex2, key2);
+                            _drawingAreaController.AddArc(vertex1, vertex2);
+                        }
+                        else if(_drawingAreaController._vertexes.Exists(v => v.Name == key1) && 
+                                !_drawingAreaController._vertexes.Exists(v => v.Name == key2))
+                        {
+                            _drawingAreaController.AddVertex(vertex2, key2);
+                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
+                        }
+                        else if(!_drawingAreaController._vertexes.Exists(v => v.Name == key1) &&
+                                _drawingAreaController._vertexes.Exists(v => v.Name == key2))
+                        {
+                            _drawingAreaController.AddVertex(vertex1, key1);
+                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
+                        }
+                        else
+                        {
+                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
+                        }
+                        
+                        tableCell.PreviousValue = keyValuePair.Value.text;
+                        InputFields[secondKey].text = keyValuePair.Value.text;
+                    }
+                }
             }
         }
-
+        
+        private void AddText(GameObject obj, int order)
+        {
+            TextMeshProUGUI text = obj.GetComponentInChildren<TextMeshProUGUI>();
+            text.text = $"x{order}";
+            obj.name = text.text;
+        }
+        
         private string ReverseKey(string key)
         {
             string secondPart = string.Empty;
@@ -132,6 +213,8 @@ namespace Laba1.Table.Controller
                     {
                         result += key[j];
                     }
+
+                    result += '_';
                     break;
                 }
 
@@ -140,12 +223,32 @@ namespace Laba1.Table.Controller
 
             return result+secondPart;
         }
-        
-        private void AddText(GameObject obj, int order)
+
+        private string GetHalfString(string key)
         {
-            TextMeshProUGUI text = obj.GetComponentInChildren<TextMeshProUGUI>();
-            text.text = $"x{order}";
-            obj.name = text.text;
+            string result = string.Empty;
+            for (int i = 0; i < key.Length; i++)
+            {
+                if (key[i] == '_')
+                {
+                    return result;
+                }
+
+                result += key[i];
+            }
+
+            return result;
+        }
+
+        private Vector2 GetRandomPosition()
+        {
+            Vector2 result = new Vector2();
+            float x = Random.Range(Screen.width * 0.45f, Screen.width);
+            float y = Random.Range(Screen.height * 0.1f, Screen.height);
+            result.x = x;
+            result.y = y;
+
+            return result;
         }
         
         private Vector2 SetNewPosition(RectTransform rectTransform, float value, bool Y = false)
