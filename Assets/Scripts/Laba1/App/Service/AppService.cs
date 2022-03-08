@@ -47,8 +47,8 @@ namespace Laba1.App.Service
             DrawingAreaController drawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
             MathematicalCalculations mathematicalCalculations = new MathematicalCalculations();
             
-            tableController.Init(countVertex);
-            drawingAreaController.Init(countVertex, mathematicalCalculations);
+            tableController.Init(countVertex, drawingAreaController);
+            drawingAreaController.Init(countVertex, mathematicalCalculations, tableController);
         }
     }
 }

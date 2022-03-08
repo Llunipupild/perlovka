@@ -289,8 +289,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5e54c88bba724751ba920d17a5055686, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _changeWeightDialog: {fileID: 2703455828073861630, guid: 0e80e63856d5f01478a83b12282d78df, type: 3}
   _vertex: {fileID: 8881660699057860186, guid: 143c2640f4ae43141917470401391d66, type: 3}
   _arc: {fileID: 8666922426357471843, guid: 828fb44ba6545734da468aeee339a4ed, type: 3}
+  _fog: {fileID: 7713068637467957137, guid: 38ff308614eb0514e8b8eb9a9fdf19d6, type: 3}
   _arcsContainer: {fileID: 1823044989914034550}
   _vertexContainer: {fileID: 3739804944386529731}
 --- !u!1 &2520167187592177662
