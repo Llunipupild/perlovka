@@ -239,7 +239,17 @@ namespace Laba1.DrawingArea.Controller
             arcComponent.Init(vertices[0], vertices[1]);
         }
         
-        private void DeleteArc(Arc arc)
+        public void DeleteArc(Vertex firstVertex, Vertex secondVertex)
+        {
+            Arc arc = _arcs.FirstOrDefault(a => a.FirstVertex == firstVertex && a.SecondVertex == secondVertex);
+            if (arc == null)
+            {
+                arc = _arcs.FirstOrDefault(a => a.FirstVertex == secondVertex && a.SecondVertex == firstVertex);
+            }
+            DeleteArc(arc);
+        }
+        
+        public void DeleteArc(Arc arc)
         {
             arc.FirstVertex.RemoveArc(arc);
             arc.SecondVertex.RemoveArc(arc);

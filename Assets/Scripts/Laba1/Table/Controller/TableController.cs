@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Laba1.Arcs.Model;
 using Laba1.DrawingArea.Controller;
 using Laba1.Table.TableInputField;
+using Laba1.Vertexes.Model;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -131,6 +133,16 @@ namespace Laba1.Table.Controller
                     continue;
                 }
 
+                if (keyValuePair.Value.text == 0.ToString())
+                {
+                    keyValuePair.Value.text = string.Empty;
+                    string secKey = ReverseKey(keyValuePair.Key);
+                    InputFields[secKey].text = string.Empty;
+                    Vertex firstVertex = _drawingAreaController._vertexes.First(v => v.Name == GetHalfString(keyValuePair.Key));
+                    Vertex secondVertex = _drawingAreaController._vertexes.First(v => v.Name == GetHalfString(secKey));
+                    _drawingAreaController.DeleteArc(firstVertex, secondVertex);
+                }
+
                 if (keyValuePair.Value.text != InputFields[secondKey].text)
                 {
                     if (keyValuePair.Value.text == tableCell.PreviousValue)
@@ -186,9 +198,10 @@ namespace Laba1.Table.Controller
                         {
                             _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
                         }
-                        
-                        tableCell.PreviousValue = keyValuePair.Value.text;
-                        InputFields[secondKey].text = keyValuePair.Value.text;
+
+                        keyValuePair.Value.text = text;
+                        tableCell.PreviousValue = text;
+                        InputFields[secondKey].text = text;
                     }
                 }
             }
