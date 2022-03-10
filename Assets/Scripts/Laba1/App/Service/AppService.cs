@@ -1,5 +1,6 @@
 ﻿using Laba1.DrawingArea.Controller;
 using Laba1.Maths;
+using Laba1.SaveController.Controller;
 using Laba1.Table.Controller;
 using UnityEngine;
 using UnityEngine.UI;
@@ -46,9 +47,11 @@ namespace Laba1.App.Service
             TableController tableController = mainDialog.GetComponent<TableController>();
             DrawingAreaController drawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
             MathematicalCalculations mathematicalCalculations = new MathematicalCalculations();
+            SaveLoadController saveLoadController = mainDialog.GetComponent<SaveLoadController>();
             
             tableController.Init(countVertex, drawingAreaController);
             drawingAreaController.Init(countVertex, mathematicalCalculations, tableController);
+            saveLoadController.Init(tableController, drawingAreaController, countVertex);
         }
     }
 }

@@ -606,6 +606,7 @@ GameObject:
   - component: {fileID: 2520167186817665275}
   - component: {fileID: 5212104035474244227}
   - component: {fileID: 8221885247090405008}
+  - component: {fileID: 4324755760378647349}
   m_Layer: 5
   m_Name: pfMainDialog
   m_TagString: Untagged
@@ -673,6 +674,20 @@ MonoBehaviour:
   _vertexContainer: {fileID: 3739804944386529731}
   _vertexes: []
   _arcs: []
+--- !u!114 &4324755760378647349
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2520167186817665274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d95dbf7283494ee392024747e35f4f76, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _saveButton: {fileID: 8012484786703873751}
+  _loadButton: {fileID: 8164322252961963101}
 --- !u!1 &2520167187592177662
 GameObject:
   m_ObjectHideFlags: 0

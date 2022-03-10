@@ -34,8 +34,9 @@ namespace Laba1.Table.Controller
         [SerializeField]
         private GameObject _inputField;
 
-        private int _countVertex;
+        public int _countVertex;
         private DrawingAreaController _drawingAreaController;
+        private List<GameObject> _partTable = new List<GameObject>();
         public Dictionary<string,InputField> InputFields { get; private set;}
         
         public void Init(int countVertex, DrawingAreaController drawingAreaController)
@@ -86,6 +87,7 @@ namespace Laba1.Table.Controller
             for (int i = 1; i < _countVertex+1; i++)
             {
                 GameObject temp = Instantiate(entity, parent);
+                _partTable.Add(temp);
                 RectTransform rectTransform = temp.GetComponent<RectTransform>();
                 value = plus ? value + distance : value - distance;
                 rectTransform.anchoredPosition = X ? SetNewPosition(rectTransform, value) : 
@@ -102,6 +104,7 @@ namespace Laba1.Table.Controller
                 {
                     string inputFieldKey = $"x{i}_x{j}";
                     GameObject inputField = Instantiate(_inputField, temp.transform);
+                    _partTable.Add(inputField);
                     inputField.AddComponent<TableCell>().Init(inputFieldKey, "");
                     RectTransform rect = inputField.GetComponent<RectTransform>();
                     inputFieldX += BASE_DISTANCE;
@@ -212,6 +215,47 @@ namespace Laba1.Table.Controller
             TextMeshProUGUI text = obj.GetComponentInChildren<TextMeshProUGUI>();
             text.text = $"x{order}";
             obj.name = text.text;
+        }
+
+        public void CreateTable(int countVertex, Dictionary<string, string> dictionary)
+        {
+            _countVertex = countVertex;
+            //_partTable.Clear();
+            CreateEntity(START_UP_X_POSITION,BASE_DISTANCE,_upTitle,_title.transform);
+            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20,_leftTitle,_column.transform, false, false);
+            CreateEntity(START_CELL_POSITION,BASE_DISTANCE +20,_cell,_table.transform,false,false, true);
+            SetTableValue(dictionary);
+        }
+
+        private void SetTableValue(Dictionary<string, string> dictionary)
+        {
+            foreach (KeyValuePair<string,string> inputField in dictionary)
+            {
+                InputFields[inputField.Key].text = inputField.Value;
+                InputFields[inputField.Key].onEndEdit.Invoke(InputFields[inputField.Key].text);
+            }
+        } 
+        public void DeleteTable()
+        {
+            InputFields.Clear();
+            for (int i = 0; i < _partTable.Count; i++)
+            {
+                GameObject temp = _partTable.First();
+                _partTable.Remove(temp);
+                Destroy(_partTable.First());
+            }
+        }
+
+        public Dictionary<string, string> GetDictionary()
+        {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+
+            foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
+            {
+                dictionary[keyValuePair.Key] = keyValuePair.Value.text;
+            }
+
+            return dictionary;
         }
         
         private string ReverseKey(string key)
