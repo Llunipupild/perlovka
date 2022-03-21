@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Laba1.Maths
 {
@@ -15,6 +16,17 @@ namespace Laba1.Maths
             float centerY = vectorDifference.y / 2;
 
             Vector2 result = new Vector2(startPosition.x + centerX, startPosition.y + centerY);
+            return result;
+        }
+        
+        public Vector2 GetRandomPosition()
+        {
+            Vector2 result = new Vector2
+            {
+                x = Random.Range(Screen.width * 0.45f, Screen.width),
+                y = Random.Range(Screen.height * 0.15f, Screen.height)
+            };
+
             return result;
         }
         

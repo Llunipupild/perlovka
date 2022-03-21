@@ -1,6 +1,7 @@
 ﻿using Laba1.DrawingArea.Controller;
 using Laba1.Maths;
-using Laba1.SaveController.Controller;
+using Laba1.SaveAndLoad.Controller;
+using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
 using UnityEngine;
 using UnityEngine.UI;
@@ -17,6 +18,13 @@ namespace Laba1.App.Service
         private GameObject _mainDialog;
         [SerializeField]
         private InputField _inputField;
+
+        public TableController TableController { get; private set; }
+        public DrawingAreaController DrawingAreaController { get; private set; }
+        public MathematicalCalculations MathematicalCalculations { get; private set; }
+        public SaveLoadButtonsController SaveLoadButtonsController { get; private set; }
+        public SaveLoadService SaveLoadService { get; private set; }
+        public int CountVertex { get; private set; }
         
         private void Start()
         {
@@ -25,33 +33,33 @@ namespace Laba1.App.Service
         
         private void StartApp(string arg)
         {
-            int countVertex = 0;
-            
             if (_inputField.text != string.Empty)
             {
-                countVertex = int.Parse(_inputField.text);
+                CountVertex = int.Parse(_inputField.text);
             }
-            if (countVertex >= 11 || countVertex <= 1)
+            if (CountVertex >= 11 || CountVertex <= 1)
             {
                 return;
             }
             
             _inputField.text = string.Empty;
             _startDialog.SetActive(false);
-            CreateMainDialog(countVertex);
+            CreateAllControllers();
         }
 
-        private void CreateMainDialog(int countVertex)
+        private void CreateAllControllers()
         {
-            GameObject mainDialog = Instantiate(_mainDialog, _canvas.transform);
-            TableController tableController = mainDialog.GetComponent<TableController>();
-            DrawingAreaController drawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
-            MathematicalCalculations mathematicalCalculations = new MathematicalCalculations();
-            SaveLoadController saveLoadController = mainDialog.GetComponent<SaveLoadController>();
+            MathematicalCalculations = new MathematicalCalculations();
+            SaveLoadService = new SaveLoadService();
             
-            tableController.Init(countVertex, drawingAreaController);
-            drawingAreaController.Init(countVertex, mathematicalCalculations, tableController);
-            saveLoadController.Init(tableController, drawingAreaController, countVertex);
+            GameObject mainDialog = Instantiate(_mainDialog, _canvas.transform);
+            TableController = mainDialog.GetComponent<TableController>();
+            DrawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
+            SaveLoadButtonsController = mainDialog.GetComponent<SaveLoadButtonsController>();
+
+            TableController.Init(this);
+            DrawingAreaController.Init(this);
+            SaveLoadButtonsController.Init(this);
         }
     }
 }

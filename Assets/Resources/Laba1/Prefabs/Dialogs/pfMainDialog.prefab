@@ -606,7 +606,7 @@ GameObject:
   - component: {fileID: 2520167186817665275}
   - component: {fileID: 5212104035474244227}
   - component: {fileID: 8221885247090405008}
-  - component: {fileID: 4324755760378647349}
+  - component: {fileID: 8615120565853025728}
   m_Layer: 5
   m_Name: pfMainDialog
   m_TagString: Untagged
@@ -672,9 +672,7 @@ MonoBehaviour:
   _arc: {fileID: 8666922426357471843, guid: 828fb44ba6545734da468aeee339a4ed, type: 3}
   _arcsContainer: {fileID: 1823044989914034550}
   _vertexContainer: {fileID: 3739804944386529731}
-  _vertexes: []
-  _arcs: []
---- !u!114 &4324755760378647349
+--- !u!114 &8615120565853025728
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -683,11 +681,12 @@ MonoBehaviour:
   m_GameObject: {fileID: 2520167186817665274}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d95dbf7283494ee392024747e35f4f76, type: 3}
+  m_Script: {fileID: 11500000, guid: c5b8b7b7586b56745b271fd50738fee6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _saveButton: {fileID: 8012484786703873751}
   _loadButton: {fileID: 8164322252961963101}
+  _findPathButton: {fileID: 5311712513796707692}
 --- !u!1 &2520167187592177662
 GameObject:
   m_ObjectHideFlags: 0

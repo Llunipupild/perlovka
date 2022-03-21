@@ -1,13 +1,15 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using JetBrains.Annotations;
+using Laba1.App.Service;
 using Laba1.Arcs.Model;
 using Laba1.DrawingArea.Controller;
+using Laba1.Maths;
 using Laba1.Table.TableInputField;
 using Laba1.Vertexes.Model;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using Random = UnityEngine.Random;
 
 namespace Laba1.Table.Controller
 {
@@ -18,6 +20,7 @@ namespace Laba1.Table.Controller
         private const int START_UP_X_POSITION = -350;
         private const int START_LEFT_X_POSITION = 520;
         private const int BASE_DISTANCE = 70;
+        private const string ZERO = "0";
 
         [SerializeField]
         private GameObject _table;
@@ -33,21 +36,32 @@ namespace Laba1.Table.Controller
         private GameObject _cell;
         [SerializeField]
         private GameObject _inputField;
-
-        public int _countVertex;
+        
+        private List<GameObject> _partsTable = new List<GameObject>();
         private DrawingAreaController _drawingAreaController;
-        private List<GameObject> _partTable = new List<GameObject>();
+        private MathematicalCalculations _mathematicalCalculations;
+        private int _countVertex;
         public Dictionary<string,InputField> InputFields { get; private set;}
         
-        public void Init(int countVertex, DrawingAreaController drawingAreaController)
+        public void Init(AppService appService)
+        {
+            _mathematicalCalculations = appService.MathematicalCalculations;
+            _drawingAreaController = appService.DrawingAreaController;
+            InputFields = new Dictionary<string, InputField>();
+            CreateTable(appService.CountVertex);
+        }
+        
+        public void CreateTable(int countVertex, [CanBeNull] Dictionary<string, string> dictionary = null)
         {
             _countVertex = countVertex;
-            _drawingAreaController = drawingAreaController;
-            InputFields = new Dictionary<string, InputField>();
+            CreateEntity(START_UP_X_POSITION, BASE_DISTANCE, _upTitle, _title.transform);
+            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20, _leftTitle,_column.transform, false, false);
+            CreateEntity(START_CELL_POSITION,BASE_DISTANCE +20, _cell,_table.transform,false,false, true);
             
-            CreateEntity(START_UP_X_POSITION,BASE_DISTANCE,_upTitle,_title.transform);
-            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20,_leftTitle,_column.transform, false, false);
-            CreateEntity(START_CELL_POSITION,BASE_DISTANCE +20,_cell,_table.transform,false,false, true);
+            if (dictionary != null)
+            {
+                SetTableValue(dictionary);
+            }
         }
         
         public void UpdateTable(Arc arc)
@@ -81,13 +95,38 @@ namespace Laba1.Table.Controller
             }
         }
         
+        public void DeleteTable()
+        {
+            int countPartsTable = _partsTable.Count;
+            InputFields.Clear();
+            
+            for (int i = 0; i < countPartsTable; i++)
+            {
+                GameObject temp = _partsTable.First();
+                _partsTable.Remove(temp);
+                Destroy(temp);
+            }
+        }
+        
+        public Dictionary<string, string> GetGraph()
+        {
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+
+            foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
+            {
+                dictionary[keyValuePair.Key] = keyValuePair.Value.text;
+            }
+
+            return dictionary;
+        }
+        
         private void CreateEntity(float startPosition, float distance, GameObject entity, Transform parent, bool plus = true, bool X = true, bool isCell = false)
         {
             float value = startPosition;
             for (int i = 1; i < _countVertex+1; i++)
             {
                 GameObject temp = Instantiate(entity, parent);
-                _partTable.Add(temp);
+                _partsTable.Add(temp);
                 RectTransform rectTransform = temp.GetComponent<RectTransform>();
                 value = plus ? value + distance : value - distance;
                 rectTransform.anchoredPosition = X ? SetNewPosition(rectTransform, value) : 
@@ -104,7 +143,7 @@ namespace Laba1.Table.Controller
                 {
                     string inputFieldKey = $"x{i}_x{j}";
                     GameObject inputField = Instantiate(_inputField, temp.transform);
-                    _partTable.Add(inputField);
+                    _partsTable.Add(inputField);
                     inputField.AddComponent<TableCell>().Init(inputFieldKey, "");
                     RectTransform rect = inputField.GetComponent<RectTransform>();
                     inputFieldX += BASE_DISTANCE;
@@ -123,90 +162,47 @@ namespace Laba1.Table.Controller
                 }
             }
         }
-
+        
         private void OnChangeTable(string text)
         {
             foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
             {
                 TableCell tableCell = keyValuePair.Value.GetComponentInParent<TableCell>();
                 string secondKey = ReverseKey(tableCell.Key);
-
-                if (keyValuePair.Value.text == tableCell.CurrentValue)
+                
+                if (keyValuePair.Value.text == InputFields[secondKey].text)
                 {
                     continue;
                 }
-
-                if (keyValuePair.Value.text == 0.ToString())
+                
+                if (keyValuePair.Value.text == ZERO)
                 {
                     keyValuePair.Value.text = string.Empty;
-                    string secKey = ReverseKey(keyValuePair.Key);
-                    InputFields[secKey].text = string.Empty;
-                    Vertex firstVertex = _drawingAreaController._vertexes.First(v => v.Name == GetHalfString(keyValuePair.Key));
-                    Vertex secondVertex = _drawingAreaController._vertexes.First(v => v.Name == GetHalfString(secKey));
+                    InputFields[secondKey].text = string.Empty;
+                    Vertex firstVertex = _drawingAreaController.GetVertexByName(GetHalfString(keyValuePair.Key));
+                    Vertex secondVertex = _drawingAreaController.GetVertexByName(GetHalfString(secondKey));
                     _drawingAreaController.DeleteArc(firstVertex, secondVertex);
+                    return;
                 }
-
-                if (keyValuePair.Value.text != InputFields[secondKey].text)
+                
+                if (keyValuePair.Value.text == tableCell.PreviousValue)
                 {
-                    if (keyValuePair.Value.text == tableCell.PreviousValue)
-                    {
-                        Vector2 vertex1 = GetRandomPosition();
-                        Vector2 vertex2 = GetRandomPosition();
-                        string key1 = GetHalfString(keyValuePair.Key);
-                        string key2 = GetHalfString(secondKey);
-                        
-                        if (_drawingAreaController._vertexes.Exists(v => v.Name == key1) ||
-                            _drawingAreaController._vertexes.Exists(v => v.Name == key2))
-                        {
-                            _drawingAreaController.AddArc(vertex1, vertex2,key1,key2);
-                        }
-                        else
-                        {
-                            _drawingAreaController.AddVertex(vertex1, key1);
-                            _drawingAreaController.AddVertex(vertex2, key2);
-                            _drawingAreaController.AddArc(vertex1, vertex2);
-                        }
-                        
-                        tableCell.PreviousValue = InputFields[secondKey].text;
-                        keyValuePair.Value.text = InputFields[secondKey].text;
-                        return;
-                    }
-                    if (InputFields[secondKey].text == tableCell.PreviousValue)
-                    {
-                        Vector2 vertex1 = GetRandomPosition();
-                        Vector2 vertex2 = GetRandomPosition();
-                        string key1 = GetHalfString(secondKey);
-                        string key2 = GetHalfString(keyValuePair.Key);
-
-                        if (!_drawingAreaController._vertexes.Exists(v => v.Name == key1) &&
-                            !_drawingAreaController._vertexes.Exists(v => v.Name == key2))
-                        {
-                            _drawingAreaController.AddVertex(vertex1, key1);
-                            _drawingAreaController.AddVertex(vertex2, key2);
-                            _drawingAreaController.AddArc(vertex1, vertex2);
-                        }
-                        else if(_drawingAreaController._vertexes.Exists(v => v.Name == key1) && 
-                                !_drawingAreaController._vertexes.Exists(v => v.Name == key2))
-                        {
-                            _drawingAreaController.AddVertex(vertex2, key2);
-                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
-                        }
-                        else if(!_drawingAreaController._vertexes.Exists(v => v.Name == key1) &&
-                                _drawingAreaController._vertexes.Exists(v => v.Name == key2))
-                        {
-                            _drawingAreaController.AddVertex(vertex1, key1);
-                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
-                        }
-                        else
-                        {
-                            _drawingAreaController.AddArc(vertex1, vertex2, key1, key2);
-                        }
-
-                        keyValuePair.Value.text = text;
-                        tableCell.PreviousValue = text;
-                        InputFields[secondKey].text = text;
-                    }
+                    CreateGraph(keyValuePair.Key, secondKey);
+                    tableCell.PreviousValue = InputFields[secondKey].text;
+                    keyValuePair.Value.text = InputFields[secondKey].text;
+                    return;
                 }
+
+                if (InputFields[secondKey].text == tableCell.PreviousValue)
+                {
+                    CreateGraph(keyValuePair.Key, secondKey);
+                    keyValuePair.Value.text = text;
+                    InputFields[secondKey].text = text;
+                    return;
+                }
+                
+                keyValuePair.Value.text = text;
+                InputFields[secondKey].text = text;
             }
         }
         
@@ -216,17 +212,7 @@ namespace Laba1.Table.Controller
             text.text = $"x{order}";
             obj.name = text.text;
         }
-
-        public void CreateTable(int countVertex, Dictionary<string, string> dictionary)
-        {
-            _countVertex = countVertex;
-            //_partTable.Clear();
-            CreateEntity(START_UP_X_POSITION,BASE_DISTANCE,_upTitle,_title.transform);
-            CreateEntity(START_LEFT_X_POSITION,BASE_DISTANCE + 20,_leftTitle,_column.transform, false, false);
-            CreateEntity(START_CELL_POSITION,BASE_DISTANCE +20,_cell,_table.transform,false,false, true);
-            SetTableValue(dictionary);
-        }
-
+        
         private void SetTableValue(Dictionary<string, string> dictionary)
         {
             foreach (KeyValuePair<string,string> inputField in dictionary)
@@ -234,28 +220,36 @@ namespace Laba1.Table.Controller
                 InputFields[inputField.Key].text = inputField.Value;
                 InputFields[inputField.Key].onEndEdit.Invoke(InputFields[inputField.Key].text);
             }
-        } 
-        public void DeleteTable()
-        {
-            InputFields.Clear();
-            for (int i = 0; i < _partTable.Count; i++)
-            {
-                GameObject temp = _partTable.First();
-                _partTable.Remove(temp);
-                Destroy(_partTable.First());
-            }
         }
 
-        public Dictionary<string, string> GetDictionary()
+        private void CreateGraph(string firstKey, string secondKey)
         {
-            Dictionary<string, string> dictionary = new Dictionary<string, string>();
-
-            foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
+            Vector2 vertex1Position = _mathematicalCalculations.GetRandomPosition();
+            Vector2 vertex2Position = _mathematicalCalculations.GetRandomPosition();
+            string key1 = GetHalfString(firstKey);
+            string key2 = GetHalfString(secondKey);
+            bool existVertex1 = _drawingAreaController.ExistVertexByName(key1);
+            bool existVertex2 = _drawingAreaController.ExistVertexByName(key2);
+            
+            switch (existVertex1)
             {
-                dictionary[keyValuePair.Key] = keyValuePair.Value.text;
+                case false when !existVertex2:
+                    _drawingAreaController.CreateVertex(vertex1Position, key1);
+                    _drawingAreaController.CreateVertex(vertex2Position, key2);
+                    _drawingAreaController.CreateArc(vertex1Position, vertex2Position);
+                    break;
+                case true when !existVertex2:
+                    _drawingAreaController.CreateVertex(vertex2Position, key2);
+                    _drawingAreaController.CreateArc(key1, key2);
+                    break;
+                case false when existVertex2:
+                    _drawingAreaController.CreateVertex(vertex1Position, key1);
+                    _drawingAreaController.CreateArc(key1, key2);
+                    break;
+                default:
+                    _drawingAreaController.CreateArc(key1, key2);
+                    break;
             }
-
-            return dictionary;
         }
         
         private string ReverseKey(string key)
@@ -278,40 +272,29 @@ namespace Laba1.Table.Controller
                 secondPart += key[i];
             }
 
-            return result+secondPart;
+            return result + secondPart;
         }
 
         private string GetHalfString(string key)
         {
             string result = string.Empty;
-            for (int i = 0; i < key.Length; i++)
+            foreach (var symbol in key)
             {
-                if (key[i] == '_')
+                if (symbol == '_')
                 {
                     return result;
                 }
-
-                result += key[i];
+                
+                result += symbol;
             }
 
             return result;
         }
-
-        private Vector2 GetRandomPosition()
-        {
-            Vector2 result = new Vector2();
-            float x = Random.Range(Screen.width * 0.45f, Screen.width);
-            float y = Random.Range(Screen.height * 0.1f, Screen.height);
-            result.x = x;
-            result.y = y;
-
-            return result;
-        }
         
-        private Vector2 SetNewPosition(RectTransform rectTransform, float value, bool Y = false)
+        private Vector2 SetNewPosition(RectTransform rectTransform, float value, bool y = false)
         {
             Vector2 anchoredPosition = rectTransform.anchoredPosition;
-            return Y ? new Vector2(anchoredPosition.x, value) : new Vector2(value, anchoredPosition.y);
+            return y ? new Vector2(anchoredPosition.x, value) : new Vector2(value, anchoredPosition.y);
         }
     }
 }

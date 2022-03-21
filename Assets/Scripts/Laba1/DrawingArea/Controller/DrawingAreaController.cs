@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Laba1.App.Service;
 using Laba1.Arcs.Model;
 using Laba1.Maths;
 using Laba1.Table.Controller;
 using Laba1.Vertexes.Model;
 using TMPro;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -32,11 +34,11 @@ namespace Laba1.DrawingArea.Controller
         private TableController _tableController;
         
         private GameObject _changeWeightDialogObject;
+        private InputField _changeWeightInputField;
         private Arc _selectedArc;
-        private InputField _inputField;
         
-        public List<Vertex> _vertexes = new List<Vertex>();
-        public List<Arc> _arcs = new List<Arc>();
+        private List<Vertex> _vertexes = new List<Vertex>();
+        private List<Arc> _arcs = new List<Arc>();
         
         private Vector2 _startPositionNewArc;
         private Vector2 _endPositionNewArc;
@@ -45,7 +47,7 @@ namespace Laba1.DrawingArea.Controller
         private bool _isChangeWeightDialog;
         private int _countVertex;
 
-        private Dictionary<string, bool> _vertexesName = new Dictionary<string, bool>()
+        private Dictionary<string, bool> _occupiedVertexesNames = new Dictionary<string, bool>
         {
             {"x1", false},
             {"x2", false},
@@ -59,15 +61,15 @@ namespace Laba1.DrawingArea.Controller
             {"x10", false}
         };
 
-        public void Init(int countVertex, MathematicalCalculations mathematicalCalculations, TableController tableController)
+        public void Init(AppService appService)
         {
-            _countVertex = countVertex;
-            _mathematicalCalculations = mathematicalCalculations;
-            _tableController = tableController;
+            _countVertex = appService.CountVertex;
+            _mathematicalCalculations = appService.MathematicalCalculations;
+            _tableController = appService.TableController;
             
             _changeWeightDialogObject = Instantiate(_changeWeightDialog, transform);
-            _inputField = _changeWeightDialogObject.GetComponentInChildren<InputField>();
-            _inputField.onEndEdit.AddListener(ChangeWeightArc);
+            _changeWeightInputField = _changeWeightDialogObject.GetComponentInChildren<InputField>();
+            _changeWeightInputField.onEndEdit.AddListener(ChangeWeightArc);
             _changeWeightDialogObject.SetActive(false);
         }
         
@@ -90,7 +92,7 @@ namespace Laba1.DrawingArea.Controller
                     }
                 }
                 
-                AddVertex(mousePosition);
+                CreateVertex(mousePosition);
                 return;
             }
             
@@ -105,7 +107,7 @@ namespace Laba1.DrawingArea.Controller
             {
                 _isCreateArc = false;
                 _endPositionNewArc = Input.mousePosition;
-                AddArc(_startPositionNewArc, _endPositionNewArc);
+                CreateArc(_startPositionNewArc, _endPositionNewArc);
                 return;
             }
             
@@ -127,8 +129,7 @@ namespace Laba1.DrawingArea.Controller
 
             if (Input.GetKey(KeyCode.LeftShift))
             {
-                Vector2 mousePosition = Input.mousePosition;
-                Arc arc = GetArcByMouseClick(mousePosition);
+                Arc arc = GetArcByMouseClick(Input.mousePosition);
                 if (arc != null)
                 {
                     DeleteArc(arc);
@@ -138,19 +139,16 @@ namespace Laba1.DrawingArea.Controller
 
             if (Input.GetKey(KeyCode.LeftAlt))
             {
-                Vector2 mousePosition = Input.mousePosition;
-                Arc arc = GetArcByMouseClick(mousePosition);
-                
-                _selectedArc = arc;
+                _selectedArc = GetArcByMouseClick(Input.mousePosition);
                 _tableController.SetTableStatus(true);
-                _isChangeWeightDialog = true;
                 _changeWeightDialogObject.SetActive(true);
+                _isChangeWeightDialog = true;
             }
         }
         
-        private void ChangeWeightArc(string arg0)
+        private void ChangeWeightArc(string text)
         {
-            if (_inputField.text == string.Empty)
+            if (text == string.Empty)
             {
                 return;
             }
@@ -160,83 +158,39 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
             
-            _tableController.UpdateTable(_selectedArc, _inputField.text);
+            _tableController.UpdateTable(_selectedArc, text);
             UnlockDrawingAreaAndTable();
         }
-        
-        public void AddArc(Vector2 startPosition, Vector2 endPosition, string vertexName1 = null, string vertexName2 = null)
+
+        public void CreateArc(string vertexName1, string vertexName2)
         {
-            if (_arcs.Count >= _countVertex * 2)
+            Vertex vertex1 = _vertexes.FirstOrDefault(v => v.Name == vertexName1);
+            Vertex vertex2 = _vertexes.FirstOrDefault(v => v.Name == vertexName2);
+            
+            if (vertex1 != null && vertex2 != null)
+            {
+                CreateArc(vertex1.GetPosition(), vertex2.GetPosition());
+            }
+        }
+        
+        public void CreateArc(Vector2 startPosition, Vector2 endPosition)
+        {
+            if (IsMaxArcCount())
+            {
+                return;
+            }
+            
+            List<Vertex> arcVertexes = FindArcVertexes(startPosition, endPosition);
+            if (HasSuchArc(arcVertexes))
             {
                 return;
             }
             
             GameObject arc = CreateObject(_arc, _arcsContainer);
             Arc arcComponent = arc.GetComponent<Arc>();
-            List<Vector2> positions = new List<Vector2>
-            {
-                startPosition, 
-                endPosition
-            };
-            List<Vertex> arcVertexes = FindArcVertexes(positions);
-            
-            if (arcVertexes[0] == null || arcVertexes[1] == null || HasSuchArc(arcVertexes))
-            {
-                if (vertexName1 == null && vertexName2 == null)
-                {
-                    Destroy(arc);
-                    return;
-                }
-                
-                arcVertexes.Clear();
-                Vertex vertex1 = _vertexes.First(v => v.Name == vertexName1);
-                arcVertexes.Add(vertex1);
-                Vertex vertex2 = _vertexes.First(v => v.Name == vertexName2);
-                arcVertexes.Add(vertex2);
-                
-                positions.Clear();
-                positions.Add(new Vector2(vertex1.X,vertex1.Y));
-                positions.Add(new Vector2(vertex2.X, vertex2.Y));
-            }
-            
-            SetArcVertices(arcVertexes, arcComponent);
-            SetArcParameters(arc, arcComponent, positions, arcVertexes);
+            SetArcParameters(arc, new List<Vector2>{startPosition, endPosition}, arcVertexes);
             _arcs.Add(arcComponent);
             _tableController.UpdateTable(arcComponent);
-        }
-
-        private void SetArcVertices(List<Vertex> arcVertexes, Arc arc)
-        {
-            arcVertexes[0].AddArc(arc);
-            arcVertexes[1].AddArc(arc);
-            arcVertexes[0].AddAdjacentVertex(arcVertexes[1]);
-            arcVertexes[1].AddAdjacentVertex(arcVertexes[0]);
-        }
-        
-        private void SetArcParameters(GameObject arc, Arc arcComponent, List<Vector2> positions, List<Vertex> vertices)
-        {
-            RectTransform rectTransform = arc.GetComponent<RectTransform>();
-            Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
-            double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
-            
-            List<Vector2> positionFromSize = new List<Vector2>();
-            positionFromSize.Add(new Vector2(vertices[0].X, vertices[0].Y));
-            positionFromSize.Add(new Vector2(vertices[1].X, vertices[1].Y));
-            
-            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize);
-            
-            arc.transform.position = new Vector2(newPosition.x, newPosition.y);
-            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);
-            
-            Vector3 eulerAngles = arc.transform.eulerAngles;
-            arc.transform.localEulerAngles = new Vector3(
-                eulerAngles.x,
-                eulerAngles.y, 
-                eulerAngles.z + (float)newAngle
-            );
-            
-            arc.name = $"arc{vertices[0].Name}{vertices[1].Name}";
-            arcComponent.Init(vertices[0], vertices[1]);
         }
         
         public void DeleteArc(Vertex firstVertex, Vertex secondVertex)
@@ -251,6 +205,11 @@ namespace Laba1.DrawingArea.Controller
         
         public void DeleteArc(Arc arc)
         {
+            if (arc == null)
+            {
+                return;
+            }
+            
             arc.FirstVertex.RemoveArc(arc);
             arc.SecondVertex.RemoveArc(arc);
             
@@ -259,7 +218,7 @@ namespace Laba1.DrawingArea.Controller
             Destroy(arc.gameObject);
         }
         
-        public void AddVertex(Vector2 position, string vertexName = null)
+        public void CreateVertex(Vector2 position, string vertexName = null)
         {
             if (_vertexes.Count == _countVertex)
             {
@@ -279,47 +238,94 @@ namespace Laba1.DrawingArea.Controller
             }
 
             GameObject vertex = CreateObject(_vertex, _vertexContainer);
-            Vertex vertexComponent = vertex.GetComponent<Vertex>();
-
-            SetVertexParameters(vertex, vertexComponent, position, vertexName);
-            _vertexes.Add(vertexComponent);
+            SetVertexParameters(vertex, position, vertexName);
+            _vertexes.Add(vertex.GetComponent<Vertex>());
         }
 
-        private void SetVertexParameters(GameObject vertex, Vertex vertexComponent, Vector3 position, string vertName = null)
+        public bool ExistVertexByName(string vertexName)
+        {
+            return _vertexes.Exists(v => v.Name == vertexName);
+        }
+        
+        public Vertex GetVertexByName(string vertexName)
+        {
+            return _vertexes.FirstOrDefault(v => v.Name == vertexName);
+        }
+        
+        private void SetArcVertices(List<Vertex> arcVertexes, Arc arc)
+        {
+            arcVertexes[0].AddArc(arc);
+            arcVertexes[1].AddArc(arc);
+        }
+        
+        private void SetArcParameters(GameObject arc, List<Vector2> positions, List<Vertex> vertices)
+        {
+            if (vertices[0] == null || vertices[1] == null)
+            {
+                return;
+            }
+            
+            RectTransform rectTransform = arc.GetComponent<RectTransform>();
+            Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
+            double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
+            
+            List<Vector2> positionFromSize = new List<Vector2>
+            {
+                new Vector2(vertices[0].X, vertices[0].Y), 
+                new Vector2(vertices[1].X, vertices[1].Y)
+            };
+
+            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize);
+            
+            arc.transform.position = new Vector2(newPosition.x, newPosition.y);
+            rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);
+            
+            Vector3 eulerAngles = arc.transform.eulerAngles;
+            arc.transform.localEulerAngles = new Vector3(
+                eulerAngles.x,
+                eulerAngles.y, 
+                eulerAngles.z + (float)newAngle
+            );
+            
+            arc.name = $"arc{vertices[0].Name}{vertices[1].Name}";
+            Arc arcComponent = arc.GetComponent<Arc>();
+            arcComponent.Init(vertices[0], vertices[1]);
+            SetArcVertices(vertices, arcComponent);
+        }
+
+        private void SetVertexParameters(GameObject vertex, Vector3 position, string vertName = null)
         {
             string vertexName = vertName ?? GetFreeName();
-            _vertexesName[vertexName] = true;
+            _occupiedVertexesNames[vertexName] = true;
             vertex.transform.position = position;
             vertex.name = vertexName;
             vertex.GetComponentInChildren<TextMeshProUGUI>().text = vertexName;
-            vertexComponent.Init(vertexName,position);
+            vertex.GetComponent<Vertex>().Init(vertexName,position);
         }
         
         private void DeleteVertex(Vertex vertex)
         {
             int arcsCount = vertex.Arcs.Count;
-            
             for (int i = 0; i < arcsCount; i++)
             {
                 DeleteArc(vertex.Arcs.First());
             }
             
-            _vertexesName[vertex.Name] = false;
+            _occupiedVertexesNames[vertex.Name] = false;
             _vertexes.Remove(vertex);
-            
             Destroy(vertex.gameObject);
         }
         
         private void UnlockDrawingAreaAndTable()
         {
             _changeWeightDialogObject.SetActive(false);
-            _isChangeWeightDialog = false;
             _tableController.SetTableStatus(false);
+            _isChangeWeightDialog = false;
         }
         
         private string GetFreeName()
         {
-            return _vertexesName.First(n => n.Value == false).Key;
+            return _occupiedVertexesNames.First(n => n.Value == false).Key;
         }
 
         private bool HasSuchArc(List<Vertex> vertices)
@@ -337,6 +343,33 @@ namespace Laba1.DrawingArea.Controller
             }
             
             return false;
+        }
+
+        private bool IsMaxArcCount()
+        {
+            return _arcs.Count >= _countVertex * 2;
+        }
+        
+        private GameObject CreateObject(GameObject obj, Transform parent)
+        {
+            return Instantiate(obj, parent);
+        }
+        
+        private Arc GetArcByMouseClick(Vector2 mousePosition)
+        {
+            Arc result = null;
+            foreach (Arc arc in _arcs)
+            {
+                if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(arc.transform.position,mousePosition,MIN_DISTANCE_ARC))
+                {
+                    continue;
+                }
+
+                result = arc;
+                break;
+            }
+
+            return result;
         }
         
         private Vertex GetNearestVertex(Vector2 position)
@@ -358,35 +391,15 @@ namespace Laba1.DrawingArea.Controller
             return result;
         }
         
-        private List<Vertex> FindArcVertexes(List<Vector2> positions)
+        private List<Vertex> FindArcVertexes(Vector2 position1, Vector2 position2)
         {
-            List<Vertex> result = new List<Vertex>();
-            result.Add(GetNearestVertex(positions[0]));
-            result.Add(GetNearestVertex(positions[1]));
-
-            return result;
-        }
-
-        private Arc GetArcByMouseClick(Vector2 mousePosition)
-        {
-            Arc result = null;
-            foreach (Arc arc in _arcs)
+            List<Vertex> result = new List<Vertex>
             {
-                if (!_mathematicalCalculations.CheckDistanceBetweenEachOther(arc.transform.position,mousePosition,MIN_DISTANCE_ARC))
-                {
-                    continue;
-                }
-
-                result = arc;
-                break;
-            }
+                GetNearestVertex(position1), 
+                GetNearestVertex(position2)
+            };
 
             return result;
-        }
-        
-        private GameObject CreateObject(GameObject obj, Transform parent)
-        {
-            return Instantiate(obj, parent);
         }
     }
 }
