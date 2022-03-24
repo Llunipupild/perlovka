@@ -1,6 +1,7 @@
-﻿using Laba1.DrawingArea.Controller;
+﻿using Laba1.Buttons;
+using Laba1.DijkstrasAlgorithm.Service;
+using Laba1.DrawingArea.Controller;
 using Laba1.Maths;
-using Laba1.SaveAndLoad.Controller;
 using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
 using UnityEngine;
@@ -19,16 +20,25 @@ namespace Laba1.App.Service
         [SerializeField]
         private InputField _inputField;
 
+        private GameObject _mainDialogGameObject;
         public TableController TableController { get; private set; }
         public DrawingAreaController DrawingAreaController { get; private set; }
         public MathematicalCalculations MathematicalCalculations { get; private set; }
-        public SaveLoadButtonsController SaveLoadButtonsController { get; private set; }
+        public ButtonsController ButtonsController { get; private set; }
         public SaveLoadService SaveLoadService { get; private set; }
+        
+        public FindPathService FindPathService { get; private set; }
         public int CountVertex { get; private set; }
         
         private void Start()
         {
             _inputField.onEndEdit.AddListener(StartApp);
+        }
+
+        public void Restart()
+        {
+            Destroy(_mainDialogGameObject);
+            _startDialog.SetActive(true);
         }
         
         private void StartApp(string arg)
@@ -51,15 +61,17 @@ namespace Laba1.App.Service
         {
             MathematicalCalculations = new MathematicalCalculations();
             SaveLoadService = new SaveLoadService();
+            FindPathService = new FindPathService();
             
-            GameObject mainDialog = Instantiate(_mainDialog, _canvas.transform);
-            TableController = mainDialog.GetComponent<TableController>();
-            DrawingAreaController = mainDialog.GetComponent<DrawingAreaController>();
-            SaveLoadButtonsController = mainDialog.GetComponent<SaveLoadButtonsController>();
+            _mainDialogGameObject = Instantiate(_mainDialog, _canvas.transform);
+            TableController = _mainDialogGameObject.GetComponent<TableController>();
+            DrawingAreaController = _mainDialogGameObject.GetComponent<DrawingAreaController>();
+            ButtonsController = _mainDialogGameObject.GetComponent<ButtonsController>();
 
             TableController.Init(this);
             DrawingAreaController.Init(this);
-            SaveLoadButtonsController.Init(this);
+            ButtonsController.Init(this);
+            FindPathService.Init(this);
         }
     }
 }

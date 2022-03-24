@@ -6,7 +6,6 @@ using Laba1.Maths;
 using Laba1.Table.Controller;
 using Laba1.Vertexes.Model;
 using TMPro;
-using UnityEditor;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -181,6 +180,11 @@ namespace Laba1.DrawingArea.Controller
             }
             
             List<Vertex> arcVertexes = FindArcVertexes(startPosition, endPosition);
+            if (arcVertexes[0] == null || arcVertexes[1] == null)
+            {
+                return;
+            }
+            
             if (HasSuchArc(arcVertexes))
             {
                 return;
@@ -188,9 +192,11 @@ namespace Laba1.DrawingArea.Controller
             
             GameObject arc = CreateObject(_arc, _arcsContainer);
             Arc arcComponent = arc.GetComponent<Arc>();
-            SetArcParameters(arc, new List<Vector2>{startPosition, endPosition}, arcVertexes);
+            SetArcParameters(arc, arcVertexes);
             _arcs.Add(arcComponent);
             _tableController.UpdateTable(arcComponent);
+            arcVertexes[0].AddAdjacentVertex(arcVertexes[1]);
+            arcVertexes[1].AddAdjacentVertex(arcVertexes[0]);
         }
         
         public void DeleteArc(Vertex firstVertex, Vertex secondVertex)
@@ -251,6 +257,11 @@ namespace Laba1.DrawingArea.Controller
         {
             return _vertexes.FirstOrDefault(v => v.Name == vertexName);
         }
+
+        public List<Vertex> GetVertexes()
+        {
+            return _vertexes;
+        }
         
         private void SetArcVertices(List<Vertex> arcVertexes, Arc arc)
         {
@@ -258,24 +269,18 @@ namespace Laba1.DrawingArea.Controller
             arcVertexes[1].AddArc(arc);
         }
         
-        private void SetArcParameters(GameObject arc, List<Vector2> positions, List<Vertex> vertices)
+        private void SetArcParameters(GameObject arc, List<Vertex> vertices)
         {
-            if (vertices[0] == null || vertices[1] == null)
-            {
-                return;
-            }
-            
-            RectTransform rectTransform = arc.GetComponent<RectTransform>();
-            Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
-            double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
-            
-            List<Vector2> positionFromSize = new List<Vector2>
+            List<Vector2> positions = new List<Vector2>
             {
                 new Vector2(vertices[0].X, vertices[0].Y), 
                 new Vector2(vertices[1].X, vertices[1].Y)
             };
-
-            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positionFromSize);
+            
+            RectTransform rectTransform = arc.GetComponent<RectTransform>();
+            Vector2 newPosition = _mathematicalCalculations.CalculateNewObjectPosition(positions);
+            double newAngle = _mathematicalCalculations.CalculateNewObjectAngle(positions);
+            int newSize = _mathematicalCalculations.CalculateNewObjectSize(positions);
             
             arc.transform.position = new Vector2(newPosition.x, newPosition.y);
             rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, newSize);

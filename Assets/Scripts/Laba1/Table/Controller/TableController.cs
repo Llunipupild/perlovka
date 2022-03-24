@@ -107,6 +107,16 @@ namespace Laba1.Table.Controller
                 Destroy(temp);
             }
         }
+
+        public int GetWeightByKey(string key)
+        {
+            return int.Parse(InputFields.FirstOrDefault(k => k.Key == key).Value.text);
+        }
+
+        public string CombineVertexNames(string vertex1, string vertex2)
+        {
+            return vertex1 + '_' + vertex2;
+        }
         
         public Dictionary<string, string> GetGraph()
         {
