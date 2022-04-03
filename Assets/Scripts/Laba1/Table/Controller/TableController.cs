@@ -1,6 +1,6 @@
-﻿using System.Collections.Generic;
+﻿#nullable enable
+using System.Collections.Generic;
 using System.Linq;
-using JetBrains.Annotations;
 using Laba1.App.Service;
 using Laba1.Arcs.Model;
 using Laba1.DrawingArea.Controller;
@@ -23,25 +23,25 @@ namespace Laba1.Table.Controller
         private const string ZERO = "0";
 
         [SerializeField]
-        private GameObject _table;
+        private GameObject _table = null!;
         [SerializeField] 
-        private GameObject _column;
+        private GameObject _column = null!;
         [SerializeField] 
-        private GameObject _title;
+        private GameObject _title = null!;
         [SerializeField]
-        private GameObject _upTitle;
+        private GameObject _upTitle = null!;
         [SerializeField]
-        private GameObject _leftTitle;
+        private GameObject _leftTitle = null!;
         [SerializeField]
-        private GameObject _cell;
+        private GameObject _cell = null!;
         [SerializeField]
-        private GameObject _inputField;
+        private GameObject _inputField = null!;
         
         private List<GameObject> _partsTable = new List<GameObject>();
-        private DrawingAreaController _drawingAreaController;
-        private MathematicalCalculations _mathematicalCalculations;
+        private DrawingAreaController _drawingAreaController = null!;
+        private MathematicalCalculations _mathematicalCalculations = null!;
         private int _countVertex;
-        public Dictionary<string,InputField> InputFields { get; private set;}
+        public Dictionary<string, InputField> InputFields { get; private set; } = null!;
         
         public void Init(AppService appService)
         {
@@ -51,7 +51,7 @@ namespace Laba1.Table.Controller
             CreateTable(appService.CountVertex);
         }
         
-        public void CreateTable(int countVertex, [CanBeNull] Dictionary<string, string> dictionary = null)
+        public void CreateTable(int countVertex, Dictionary<string, string>? dictionary = null)
         {
             _countVertex = countVertex;
             CreateEntity(START_UP_X_POSITION, BASE_DISTANCE, _upTitle, _title.transform);

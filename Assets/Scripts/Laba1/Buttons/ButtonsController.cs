@@ -3,6 +3,7 @@ using Laba1.DijkstrasAlgorithm.Service;
 using Laba1.SaveAndLoad.Model;
 using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -13,6 +14,7 @@ namespace Laba1.Buttons
         private const string KEY = "perlLb1";
         private const string CONTAINER1 = "FindVertexContainer1";
         private const string CONTAINER2 = "FindVertexContainer2";
+        private const string OUTPUT = "Output";
         
         [SerializeField] 
         private Button _saveButton;
@@ -34,6 +36,9 @@ namespace Laba1.Buttons
 
         private InputField _inputFieldVertex1;
         private InputField _inputFieldVertex2;
+        private TextMeshProUGUI _outputText;
+        private GameObject _outputContainer;
+        private Button _closeButton;
         
         public void Init(AppService appService)
         {
@@ -51,9 +56,14 @@ namespace Laba1.Buttons
             _findPathDialogObject = Instantiate(_findPathDialog, transform);
             _inputFieldVertex1 = GameObject.Find(CONTAINER1).GetComponent<InputField>();
             _inputFieldVertex2 = GameObject.Find(CONTAINER2).GetComponent<InputField>();
+            _outputText = GameObject.Find(OUTPUT).GetComponent<TextMeshProUGUI>();
+            _outputContainer = GameObject.Find("OutputContainer");
+            _closeButton = GameObject.Find("CloseButton").GetComponent<Button>();
             _inputFieldVertex1.onEndEdit.AddListener(OnChangeInputFields);
             _inputFieldVertex2.onEndEdit.AddListener(OnChangeInputFields);
+            _closeButton.onClick.AddListener(OnCloseButton);
             _findPathDialogObject.SetActive(false);
+            _outputContainer.SetActive(false);
         }
 
         private void OnDestroy()
@@ -62,6 +72,24 @@ namespace Laba1.Buttons
             _loadButton.onClick.RemoveListener(OnLoadButtonClick);
             _findPathButton.onClick.RemoveListener(OnFindPathButton);
             _exitButton.onClick.RemoveListener(OnExitButtonClick);
+            _closeButton.onClick.RemoveListener(OnCloseButton);
+        }
+
+        public void PrintError()
+        {
+            ShowOutputContainer("Некорректные данные");
+            _findPathDialogObject.SetActive(false);
+        }
+
+        public void ShowOutputContainer(string message = null)
+        {
+            _outputContainer.SetActive(true);
+            if (message == null)
+            {
+                return;
+            }
+
+            _outputText.text = message;
         }
 
         private void OnSaveButtonClick()
@@ -90,6 +118,12 @@ namespace Laba1.Buttons
         private void OnExitButtonClick()
         {
             _appService.Restart();
+        }
+
+        private void OnCloseButton()
+        {
+            
+            _outputContainer.SetActive(false);
         }
 
         private void OnChangeInputFields(string text)

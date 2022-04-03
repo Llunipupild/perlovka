@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using Laba1.App.Service;
+using Laba1.Buttons;
 using Laba1.DrawingArea.Controller;
 using Laba1.Table.Controller;
 using Laba1.Vertexes.Model;
@@ -10,6 +11,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
     public class FindPathService
     {
         private DrawingAreaController _drawingAreaController;
+        private ButtonsController _buttonsController;
         private TableController _tableController;
 
         private List<Vertex> _vertices;
@@ -20,6 +22,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
         public void Init(AppService appService)
         {
             _drawingAreaController = appService.DrawingAreaController;
+            _buttonsController = appService.ButtonsController;
             _tableController = appService.TableController;
         }
         
@@ -30,8 +33,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
 
             if (vertex1 == null || vertex2 == null)
             {
-                //на той панельке с контейнерами сделать
-                Debug.Log("Некорректные данные");
+                _buttonsController.PrintError();
                 return;
             }
 
@@ -60,6 +62,12 @@ namespace Laba1.DijkstrasAlgorithm.Service
             }
         }
 
+        private void PrintResults()
+        {
+            _buttonsController.ShowOutputContainer();
+            //вывод пути и изменение палок графа
+        }
+
         private void InitVisitedVertices()
         {
             foreach (Vertex vertex in _vertices)
@@ -74,12 +82,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 _verticesLabels.Add(vertex.Name, int.MaxValue);
             }
         }
-
-        private void SetVertPath(string name, string value)
-        {
-            _vertPath[name] = value;
-        }
-
+        
         private void VisitVertex(Vertex sourceVertex)
         {
             foreach (Vertex vertex in sourceVertex.AdjacentVertices)
@@ -89,7 +92,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 
                 if (newWeight < _verticesLabels[vertex.Name])
                 {
-                    SetVertPath(sourceVertex.Name, vertex.Name);
+                    _vertPath[sourceVertex.Name] = vertex.Name;
                     _verticesLabels[vertex.Name] = newWeight;
                 }
             }

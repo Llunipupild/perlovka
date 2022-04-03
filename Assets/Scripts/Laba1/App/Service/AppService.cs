@@ -26,7 +26,6 @@ namespace Laba1.App.Service
         public MathematicalCalculations MathematicalCalculations { get; private set; }
         public ButtonsController ButtonsController { get; private set; }
         public SaveLoadService SaveLoadService { get; private set; }
-        
         public FindPathService FindPathService { get; private set; }
         public int CountVertex { get; private set; }
         

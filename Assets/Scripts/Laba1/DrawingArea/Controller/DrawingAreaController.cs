@@ -44,6 +44,7 @@ namespace Laba1.DrawingArea.Controller
         
         private bool _isCreateArc;
         private bool _isChangeWeightDialog;
+        private bool _isBlock;
         private int _countVertex;
 
         private Dictionary<string, bool> _occupiedVertexesNames = new Dictionary<string, bool>
@@ -74,7 +75,7 @@ namespace Laba1.DrawingArea.Controller
         
         private void Update()
         {
-            if (_isChangeWeightDialog)
+            if (_isBlock)
             {
                 return;
             }
@@ -145,22 +146,6 @@ namespace Laba1.DrawingArea.Controller
             }
         }
         
-        private void ChangeWeightArc(string text)
-        {
-            if (text == string.Empty)
-            {
-                return;
-            }
-            if (_selectedArc == null)
-            {
-                UnlockDrawingAreaAndTable();
-                return;
-            }
-            
-            _tableController.UpdateTable(_selectedArc, text);
-            UnlockDrawingAreaAndTable();
-        }
-
         public void CreateArc(string vertexName1, string vertexName2)
         {
             Vertex vertex1 = _vertexes.FirstOrDefault(v => v.Name == vertexName1);
@@ -178,13 +163,11 @@ namespace Laba1.DrawingArea.Controller
             {
                 return;
             }
-            
             List<Vertex> arcVertexes = FindArcVertexes(startPosition, endPosition);
             if (arcVertexes[0] == null || arcVertexes[1] == null)
             {
                 return;
             }
-            
             if (HasSuchArc(arcVertexes))
             {
                 return;
@@ -263,6 +246,31 @@ namespace Laba1.DrawingArea.Controller
             return _vertexes;
         }
         
+        public void SetArcsColor(Color color)
+        {
+            foreach (Arc arc in _arcs)
+            {
+                arc.gameObject.GetComponent<Image>().color = color;
+            }
+        }
+        
+        private void ChangeWeightArc(string text)
+        {
+            LockDrawingAreaAndTable();
+            if (text == string.Empty)
+            {
+                return;
+            }
+            if (_selectedArc == null)
+            {
+                UnlockDrawingAreaAndTable();
+                return;
+            }
+            
+            _tableController.UpdateTable(_selectedArc, text);
+            UnlockDrawingAreaAndTable();
+        }
+        
         private void SetArcVertices(List<Vertex> arcVertexes, Arc arc)
         {
             arcVertexes[0].AddArc(arc);
@@ -320,9 +328,17 @@ namespace Laba1.DrawingArea.Controller
             _vertexes.Remove(vertex);
             Destroy(vertex.gameObject);
         }
+
+        public void LockDrawingAreaAndTable()
+        {
+            _isBlock = true;
+            _tableController.SetTableStatus(true);
+        }
         
+        //todo здесь наверное чото сломал
         private void UnlockDrawingAreaAndTable()
         {
+            _isBlock = false;
             _changeWeightDialogObject.SetActive(false);
             _tableController.SetTableStatus(false);
             _isChangeWeightDialog = false;

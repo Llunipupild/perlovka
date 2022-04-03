@@ -1,14 +1,13 @@
-﻿using JetBrains.Annotations;
-using Laba1.SaveAndLoad.Model;
+﻿using Laba1.SaveAndLoad.Model;
 using Newtonsoft.Json;
 using UnityEngine;
 
 namespace Laba1.SaveAndLoad.Service
 {
-    [PublicAPI]
     public class SaveLoadService
     {
         private SaveModel _cache;
+        
         public SaveModel Get(string key)
         {
             if (_cache != null)
