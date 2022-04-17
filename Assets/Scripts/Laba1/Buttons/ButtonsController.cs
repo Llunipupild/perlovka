@@ -1,5 +1,7 @@
-﻿using Laba1.App.Service;
+﻿using System;
+using Laba1.App.Service;
 using Laba1.DijkstrasAlgorithm.Service;
+using Laba1.DrawingArea.Controller;
 using Laba1.SaveAndLoad.Model;
 using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
@@ -29,6 +31,7 @@ namespace Laba1.Buttons
 
         private AppService _appService;
         private TableController _tableController;
+        private DrawingAreaController _drawingAreaController;
         private FindPathService _findPathService;
         private SaveLoadService _saveLoadService;
         private GameObject _findPathDialogObject;
@@ -46,6 +49,7 @@ namespace Laba1.Buttons
             _tableController = appService.TableController;
             _saveLoadService = appService.SaveLoadService;
             _findPathService = appService.FindPathService;
+            _drawingAreaController = appService.DrawingAreaController;
             _appService = appService;
 
             _saveButton.onClick.AddListener(OnSaveButtonClick);
@@ -75,17 +79,17 @@ namespace Laba1.Buttons
             _closeButton.onClick.RemoveListener(OnCloseButton);
         }
 
-        public void PrintError()
+        public void PrintError(string message = "Некорректные данные")
         {
-            ShowOutputContainer("Некорректные данные");
+            ShowOutputContainer(message);
             _findPathDialogObject.SetActive(false);
         }
 
         public void ShowOutputContainer(string message = null)
         {
+            _findPathButton.gameObject.SetActive(false);
             _outputContainer.SetActive(true);
-            if (message == null)
-            {
+            if (message == null) {
                 return;
             }
 
@@ -113,6 +117,7 @@ namespace Laba1.Buttons
         private void OnFindPathButton()
         {
             _findPathDialogObject.SetActive(true);
+            _drawingAreaController.LockDrawingAreaAndTable();
         }
 
         private void OnExitButtonClick()
@@ -122,18 +127,22 @@ namespace Laba1.Buttons
 
         private void OnCloseButton()
         {
-            
+            _drawingAreaController.SetArcsColor(Color.red);
             _outputContainer.SetActive(false);
+            _drawingAreaController.UnlockDrawingAreaAndTable();
+            _findPathButton.gameObject.SetActive(true);
         }
 
         private void OnChangeInputFields(string text)
         {
-            if (_inputFieldVertex1.text == string.Empty || _inputFieldVertex2.text == string.Empty)
-            {
+            if (_inputFieldVertex1.text == string.Empty || _inputFieldVertex2.text == string.Empty) {
                 return;
             }
             
             _findPathService.FindPath(_inputFieldVertex1.text, _inputFieldVertex2.text);
+            _findPathDialogObject.SetActive(false);
+            _inputFieldVertex1.text = string.Empty;
+            _inputFieldVertex2.text = string.Empty;
         }
     }
 }

@@ -628,7 +628,7 @@ RectTransform:
   - {fileID: 2520167186359221983}
   - {fileID: 2520167186412304570}
   - {fileID: 6233642251688671737}
-  - {fileID: 1118837236416143941}
+  - {fileID: 1485542476983582018}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1529,7 +1529,7 @@ MonoBehaviour:
   m_hasFontAssetChanged: 0
   m_baseMaterial: {fileID: 0}
   m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!1001 &1091132218869751667
+--- !u!1001 &1458928175508308084
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1550,7 +1550,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchorMax.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchorMax.y
@@ -1558,7 +1558,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchorMin.x
-      value: 1
+      value: 0.5
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchorMin.y
@@ -1602,7 +1602,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: -300
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_AnchoredPosition.y
@@ -1626,8 +1626,8 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
---- !u!224 &1118837236416143941 stripped
+--- !u!224 &1485542476983582018 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
-  m_PrefabInstance: {fileID: 1091132218869751667}
+  m_PrefabInstance: {fileID: 1458928175508308084}
   m_PrefabAsset: {fileID: 0}

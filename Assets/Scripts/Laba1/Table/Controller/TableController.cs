@@ -110,7 +110,8 @@ namespace Laba1.Table.Controller
 
         public int GetWeightByKey(string key)
         {
-            return int.Parse(InputFields.FirstOrDefault(k => k.Key == key).Value.text);
+            int.TryParse(InputFields.FirstOrDefault(k => k.Key == key).Value.text, out int result);
+            return result;
         }
 
         public string CombineVertexNames(string vertex1, string vertex2)

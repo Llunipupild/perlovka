@@ -43,7 +43,6 @@ namespace Laba1.DrawingArea.Controller
         private Vector2 _endPositionNewArc;
         
         private bool _isCreateArc;
-        private bool _isChangeWeightDialog;
         private bool _isBlock;
         private int _countVertex;
 
@@ -142,8 +141,31 @@ namespace Laba1.DrawingArea.Controller
                 _selectedArc = GetArcByMouseClick(Input.mousePosition);
                 _tableController.SetTableStatus(true);
                 _changeWeightDialogObject.SetActive(true);
-                _isChangeWeightDialog = true;
+                _isBlock = true;
             }
+        }
+
+        public void SetVerticesColors(List<Vertex> vertices, Color color)
+        {
+            foreach (Vertex vertex in vertices)
+            {
+                if (vertex == null) {
+                    continue;
+                }
+                
+                foreach (Vertex vertexAdjacentVertex in vertex.AdjacentVertices)
+                {
+                    if (vertices.Contains(vertexAdjacentVertex)) {
+                        Arc arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertex.Name}{vertexAdjacentVertex.Name}");
+                        if (arc == null) {
+                            arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertexAdjacentVertex.Name}{vertex.Name}");
+                        }
+
+                        arc!.gameObject.GetComponent<Image>().color = color;
+                    }
+                }
+            }
+            
         }
         
         public void CreateArc(string vertexName1, string vertexName2)
@@ -336,12 +358,11 @@ namespace Laba1.DrawingArea.Controller
         }
         
         //todo здесь наверное чото сломал
-        private void UnlockDrawingAreaAndTable()
+        public void UnlockDrawingAreaAndTable()
         {
             _isBlock = false;
             _changeWeightDialogObject.SetActive(false);
             _tableController.SetTableStatus(false);
-            _isChangeWeightDialog = false;
         }
         
         private string GetFreeName()
