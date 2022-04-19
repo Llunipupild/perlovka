@@ -28,7 +28,8 @@ namespace Laba1.DrawingArea.Controller
         private Transform _arcsContainer;
         [SerializeField]
         private Transform _vertexContainer;
-        
+
+        private AppService _appService;
         private MathematicalCalculations _mathematicalCalculations;
         private TableController _tableController;
         
@@ -62,6 +63,7 @@ namespace Laba1.DrawingArea.Controller
 
         public void Init(AppService appService)
         {
+            _appService = appService;
             _countVertex = appService.CountVertex;
             _mathematicalCalculations = appService.MathematicalCalculations;
             _tableController = appService.TableController;
@@ -79,6 +81,7 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
             
+            //создание вершины
             if (Input.GetMouseButtonDown(0))
             {
                 Vector2 mousePosition = Input.mousePosition;
@@ -95,13 +98,13 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
             
+            //создание дуги
             if (Input.GetKey(KeyCode.Space) && !_isCreateArc)
             {
                 _isCreateArc = true;
                 _startPositionNewArc = Input.mousePosition;
                 return;
             }
-
             if (!Input.GetKey(KeyCode.Space) && _isCreateArc)
             {
                 _isCreateArc = false;
@@ -110,6 +113,7 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
             
+            //удаление вершины
             if (Input.GetMouseButtonUp(1))
             {
                 Vector2 mousePosition = Input.mousePosition;
@@ -126,6 +130,7 @@ namespace Laba1.DrawingArea.Controller
                 }
             }
 
+            //удаление дуги
             if (Input.GetKey(KeyCode.LeftShift))
             {
                 Arc arc = GetArcByMouseClick(Input.mousePosition);
@@ -136,6 +141,7 @@ namespace Laba1.DrawingArea.Controller
                 return;
             }
 
+            //изменение веса
             if (Input.GetKey(KeyCode.LeftAlt))
             {
                 _selectedArc = GetArcByMouseClick(Input.mousePosition);
@@ -143,8 +149,13 @@ namespace Laba1.DrawingArea.Controller
                 _changeWeightDialogObject.SetActive(true);
                 _isBlock = true;
             }
-        }
 
+            //перетаскивание вершины
+            if (Input.GetKey(KeyCode.Mouse0)) {
+                
+            }
+        }
+        
         public void SetVerticesColors(List<Vertex> vertices, Color color)
         {
             foreach (Vertex vertex in vertices)
@@ -214,7 +225,7 @@ namespace Laba1.DrawingArea.Controller
             DeleteArc(arc);
         }
         
-        public void DeleteArc(Arc arc)
+        public void DeleteArc(Arc arc, bool UpdateTable = true)
         {
             if (arc == null)
             {
@@ -223,8 +234,12 @@ namespace Laba1.DrawingArea.Controller
             
             arc.FirstVertex.RemoveArc(arc);
             arc.SecondVertex.RemoveArc(arc);
+
+            if (UpdateTable)
+            {
+                _tableController.UpdateTable(arc, "");
+            }
             
-            _tableController.UpdateTable(arc, "");
             _arcs.Remove(arc);
             Destroy(arc.gameObject);
         }
@@ -251,6 +266,20 @@ namespace Laba1.DrawingArea.Controller
             GameObject vertex = CreateObject(_vertex, _vertexContainer);
             SetVertexParameters(vertex, position, vertexName);
             _vertexes.Add(vertex.GetComponent<Vertex>());
+        }
+
+        //если будет не лень, то переименовать
+        public bool CanMoved(Vector2 newPosition)
+        {
+            foreach (Vertex vertex in _vertexes)
+            {
+                if (_mathematicalCalculations.CheckDistanceBetweenEachOther(newPosition, vertex.GetPosition(), MIN_DISTANCE_VERTEX))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public bool ExistVertexByName(string vertexName)
@@ -335,7 +364,7 @@ namespace Laba1.DrawingArea.Controller
             vertex.transform.position = position;
             vertex.name = vertexName;
             vertex.GetComponentInChildren<TextMeshProUGUI>().text = vertexName;
-            vertex.GetComponent<Vertex>().Init(vertexName,position);
+            vertex.GetComponent<Vertex>().Init(vertexName, position, _appService);
         }
         
         private void DeleteVertex(Vertex vertex)
