@@ -190,7 +190,7 @@ namespace Laba1.DrawingArea.Controller
             }
         }
         
-        public void CreateArc(Vector2 startPosition, Vector2 endPosition)
+        public void CreateArc(Vector2 startPosition, Vector2 endPosition, bool needUpdateTable = true)
         {
             if (IsMaxArcCount())
             {
@@ -210,7 +210,10 @@ namespace Laba1.DrawingArea.Controller
             Arc arcComponent = arc.GetComponent<Arc>();
             SetArcParameters(arc, arcVertexes);
             _arcs.Add(arcComponent);
-            _tableController.UpdateTable(arcComponent);
+            if (needUpdateTable)
+            {
+                _tableController.UpdateTable(arcComponent);
+            }
             arcVertexes[0].AddAdjacentVertex(arcVertexes[1]);
             arcVertexes[1].AddAdjacentVertex(arcVertexes[0]);
         }
@@ -267,13 +270,16 @@ namespace Laba1.DrawingArea.Controller
             SetVertexParameters(vertex, position, vertexName);
             _vertexes.Add(vertex.GetComponent<Vertex>());
         }
-
-        //если будет не лень, то переименовать
-        public bool CanMoved(Vector2 newPosition)
+        
+        public bool CanMoved(Vector2 newPosition, string vertexName)
         {
             foreach (Vertex vertex in _vertexes)
             {
-                if (_mathematicalCalculations.CheckDistanceBetweenEachOther(newPosition, vertex.GetPosition(), MIN_DISTANCE_VERTEX))
+                if (vertex.Name == vertexName)
+                {
+                    continue;   
+                }
+                if (_mathematicalCalculations.CheckDistanceBetweenEachOther(newPosition, vertex.GetPosition(), 150))
                 {
                     return false;
                 }

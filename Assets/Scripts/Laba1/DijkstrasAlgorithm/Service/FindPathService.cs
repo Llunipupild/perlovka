@@ -63,7 +63,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
             {
                 VisitVertex(GetVertexWithSmallWeight());
             }
-            
+
             List<Vertex> drawVertices = new List<Vertex>();
             Vertex currentVertex = secondVertex;
             while (true)
@@ -71,15 +71,23 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 drawVertices.Add(currentVertex);
                 List<Vertex> nearestVertices = GetNearestVertices(currentVertex);
                 Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
-                if (smallWeightVertex == null) {
+                if (smallWeightVertex == null)
+                {
                     drawVertices.Add(sourceVertex);
                     break;
                 }
-                if (smallWeightVertex.Name == sourceVertex.Name) {
-                    drawVertices.Add(sourceVertex);
+
+                if (nearestVertices.Contains(secondVertex))
+                {
+                    drawVertices.Add(secondVertex);
                     break;
                 }
+
                 currentVertex = smallWeightVertex;
+            }
+
+            //mb oshibka
+            if (!drawVertices.Contains(secondVertex)) {
             }
 
             _drawingAreaController.LockDrawingAreaAndTable();

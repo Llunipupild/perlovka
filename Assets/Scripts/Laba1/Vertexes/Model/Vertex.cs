@@ -75,20 +75,27 @@ namespace Laba1.Vertexes.Model
             {
                 _drawingAreaController.DeleteArc(_arcs.First(), false);
             }
+            
+            //_drawingAreaController.LockDrawingAreaAndTable();
         }
 
         public void OnDrag(PointerEventData eventData)
         {
+            if (eventData.pointerCurrentRaycast.gameObject == null)
+            {
+                return;
+            }
             if (eventData.pointerCurrentRaycast.gameObject.GetComponent<Vertex>() == null)
             {
                 return;
             }
-            // //метод в drawing area, который перебирает все вершины и через матемтаику сравнивает позиции
-            // Vector2 newPosition = eventData.pointerCurrentRaycast.gameObject.GetComponent<RectTransform>().anchoredPosition += eventData.delta;
-            // if (!_drawingAreaController.CanMoved(newPosition))
-            // {
-            //     return;
-            // }
+
+            Vertex vertex = eventData.pointerCurrentRaycast.gameObject.GetComponent<Vertex>();
+            //метод в drawing area, который перебирает все вершины и через матемтаику сравнивает позиции
+            if (!_drawingAreaController.CanMoved(eventData.pointerCurrentRaycast.gameObject.transform.position, vertex.Name))
+            {
+                return;
+            }
             
             eventData.pointerCurrentRaycast.gameObject.GetComponent<RectTransform>().anchoredPosition += eventData.delta;
             X += eventData.delta.x;
@@ -99,10 +106,11 @@ namespace Laba1.Vertexes.Model
         {
             foreach (KeyValuePair<string, int> arc in _arcsWeigh)
             {
-                _drawingAreaController.CreateArc(GetPosition(), _drawingAreaController.GetVertexByName(arc.Key).GetPosition());
+                _drawingAreaController.CreateArc(GetPosition(), _drawingAreaController.GetVertexByName(arc.Key).GetPosition(), false);
             }
             
             _arcsWeigh.Clear();
+            _drawingAreaController.UnlockDrawingAreaAndTable();
         }
     }
 }
