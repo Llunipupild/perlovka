@@ -9,6 +9,7 @@ using Laba1.Table.TableInputField;
 using Laba1.Vertexes.Model;
 using TMPro;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace Laba1.Table.Controller
@@ -51,7 +52,7 @@ namespace Laba1.Table.Controller
             CreateTable(appService.CountVertex);
         }
         
-        public void CreateTable(int countVertex, Dictionary<string, string>? dictionary = null)
+        public void CreateTable(int countVertex, Dictionary<string, string>? dictionary = null, Dictionary<string, Vector2>? positions = null)
         {
             _countVertex = countVertex;
             CreateEntity(START_UP_X_POSITION, BASE_DISTANCE, _upTitle, _title.transform);
@@ -60,7 +61,7 @@ namespace Laba1.Table.Controller
             
             if (dictionary != null)
             {
-                SetTableValue(dictionary);
+                SetTableValue(dictionary, positions);
             }
         }
         
@@ -224,12 +225,20 @@ namespace Laba1.Table.Controller
             obj.name = text.text;
         }
         
-        private void SetTableValue(Dictionary<string, string> dictionary)
+        private void SetTableValue(Dictionary<string, string> dictionary, Dictionary<string, Vector2> positions)
         {
             foreach (KeyValuePair<string,string> inputField in dictionary)
             {
                 InputFields[inputField.Key].text = inputField.Value;
                 InputFields[inputField.Key].onEndEdit.Invoke(InputFields[inputField.Key].text);
+            }
+
+            foreach (Vertex vertex in _drawingAreaController.GetVertexes())
+            {
+                Vector2 position = positions.First(p => p.Key == vertex.Name).Value;
+                vertex.SetNewPosition(position);
+                vertex.OnBeginDrag(new PointerEventData(EventSystem.current));
+                vertex.OnEndDrag(new PointerEventData(EventSystem.current));
             }
         }
 

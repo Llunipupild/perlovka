@@ -1,10 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using Laba1.App.Service;
 using Laba1.DijkstrasAlgorithm.Service;
 using Laba1.DrawingArea.Controller;
 using Laba1.SaveAndLoad.Model;
 using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
+using Laba1.Vertexes.Model;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -103,7 +104,13 @@ namespace Laba1.Buttons
                 _saveLoadService.Delete(KEY);
             }
 
-            SaveModel saveModel = new SaveModel(_countVertex, _tableController.GetGraph());
+            Dictionary<string, Vector2> positions = new Dictionary<string, Vector2>();
+            foreach (Vertex vertex in _drawingAreaController.GetVertexes())
+            {
+                positions[vertex.Name] = vertex.GetPosition();
+            }
+            
+            SaveModel saveModel = new SaveModel(_countVertex, _tableController.GetGraph(), positions);
             _saveLoadService.Set(saveModel, KEY);
         }
 
@@ -111,7 +118,7 @@ namespace Laba1.Buttons
         {
             SaveModel saveModel = _saveLoadService.Get(KEY);
             _tableController.DeleteTable();
-            _tableController.CreateTable(saveModel.CountVertex, saveModel.Graph);
+            _tableController.CreateTable(saveModel.CountVertex, saveModel.Graph, saveModel.Positions);
         }
 
         private void OnFindPathButton()

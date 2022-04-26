@@ -33,7 +33,10 @@ namespace Laba1.SaveAndLoad.Service
         public void Set(SaveModel model, string key)
         {
             _cache = model;
-            PlayerPrefs.SetString(key, JsonConvert.SerializeObject(model, new JsonSerializerSettings()));
+            PlayerPrefs.SetString(key, JsonConvert.SerializeObject(model, new JsonSerializerSettings()
+            {
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+            }));
             PlayerPrefs.Save();
         }
         

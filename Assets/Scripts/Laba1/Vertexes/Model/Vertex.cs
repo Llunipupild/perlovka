@@ -57,6 +57,13 @@ namespace Laba1.Vertexes.Model
             _adjacentVertices.Remove(vertex);
         }
 
+        public void SetNewPosition(Vector2 position)
+        {
+            X = position.x;
+            Y = position.y;
+            gameObject.transform.position = position;
+        }
+
         public Vector2 GetPosition()
         {
             return new Vector2(X, Y);
