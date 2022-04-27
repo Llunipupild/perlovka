@@ -177,6 +177,14 @@ namespace Laba1.Table.Controller
         
         private void OnChangeTable(string text)
         {
+            int.TryParse(text, out int value);
+            if (value < 0)
+            {
+                KeyValuePair<string,InputField> keyValuePair = InputFields.First(t => t.Value.text == text);
+                InputFields[keyValuePair.Key].text = string.Empty;
+                return;
+            }
+            
             foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
             {
                 TableCell tableCell = keyValuePair.Value.GetComponentInParent<TableCell>();
