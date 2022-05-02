@@ -40,12 +40,13 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 _buttonsController.PrintError();
                 return;
             }
-
-            if (vertex2.AdjacentVertices.Count == 0) {
+            
+            if (vertex2.AdjacentVertices.Count == 0 || vertex1.AdjacentVertices.Count == 0) {
                 _drawingAreaController.LockDrawingAreaAndTable();
                 _buttonsController.PrintError("Нет пути!");
                 return;
             }
+            
 
             FindPath(vertex1, vertex2);
         }
@@ -71,25 +72,21 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 drawVertices.Add(currentVertex);
                 List<Vertex> nearestVertices = GetNearestVertices(currentVertex);
                 Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
-                if (smallWeightVertex == null)
+                if (smallWeightVertex == null || smallWeightVertex.Name == sourceVertex.Name)
                 {
                     drawVertices.Add(sourceVertex);
                     break;
                 }
 
-                if (nearestVertices.Contains(secondVertex))
+                if (nearestVertices.Contains(sourceVertex))
                 {
                     drawVertices.Add(secondVertex);
                     break;
                 }
-
+                
                 currentVertex = smallWeightVertex;
             }
-
-            //mb oshibka
-            if (!drawVertices.Contains(secondVertex)) {
-            }
-
+            
             _drawingAreaController.LockDrawingAreaAndTable();
             SetArcsColors(drawVertices, Color.magenta);
             PrintResults($"Кратчайший путь = {_verticesLabels[secondVertex.Name]}");

@@ -49,6 +49,11 @@ namespace Laba1.Vertexes.Model
 
         public void AddAdjacentVertex(Vertex vertex)
         {
+            Vertex vert = _adjacentVertices.FirstOrDefault(v => v.Name == vertex.Name);
+            if (vert != null) {
+                RemoveVertex(vert);
+            }
+            
             _adjacentVertices.Add(vertex);
         }
 
