@@ -1,4 +1,6 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using JetBrains.Annotations;
 using Laba1.App.Service;
 using Laba1.Buttons;
@@ -19,6 +21,31 @@ namespace Laba1.DijkstrasAlgorithm.Service
         private Dictionary<string, int> _verticesLabels;
         private Dictionary<string, bool> _visitedVertices;
         private Dictionary<string, string> _intermediateVertices;
+        private Dictionary<string, string> _xyeta = new Dictionary<string, string>();
+        private Dictionary<string, string> _xyeta2 = new Dictionary<string, string>();
+        
+        private List<Floid> _floids = new List<Floid>();
+        
+        public class Floid
+        {
+            public string Id { get;}
+            public string Source { get;}
+            public string Finish { get;}
+            public int Weight { get; set; }
+            
+            public Floid(string id, string source, string finish, int weight) 
+            {
+                Id = id;
+                Source = source;
+                Finish = finish;
+                Weight = weight;
+            }
+
+            public Floid() {
+                
+            }
+        }
+        
 
         public void Init(AppService appService)
         {
@@ -31,8 +58,168 @@ namespace Laba1.DijkstrasAlgorithm.Service
             _intermediateVertices = new Dictionary<string, string>();
         }
 
-        public void FindPath(string vertex1Name, string vertex2Name)
+        public void CompareAlghoritms() {
+            List<Vertex> vertexes = _drawingAreaController.GetVertexes();
+            if (vertexes == null) {
+                return;
+            }
+            if (vertexes.Count < 2) {
+                return;
+            }
+            
+            DateTime now = DateTime.Now;
+            int j = 0;
+            for (int i = 0; i < 1000000; i++) {
+                for (int k = 0; k < 1000; k++) {
+                    j++;
+                }
+            }
+
+            Vertex sourceVertex = vertexes.First();
+            ClearResources();
+            _vertices = _drawingAreaController.GetVertexes();
+            _verticesLabels.Add(sourceVertex.Name, 0);
+
+            InitVisitedVertices();
+            VisitVertex(sourceVertex);
+
+            while (ExistNotVisitedVertex(_visitedVertices)) {
+                VisitVertex(GetVertexWithSmallWeight());
+            }
+            
+            DateTime newNow = DateTime.Now;
+            string deiksta = $"Дейкстра = {newNow.Second - now.Second - 1}";
+            
+            DateTime now2 = DateTime.Now;
+            int j2 = 0;
+            for (int i = 0; i < 1000000; i++) {
+                for (int k = 0; k < 1000; k++) {
+                    j2++;
+                }
+            }
+            
+            List<Vertex> vertices = _drawingAreaController.GetVertexes();
+            foreach (Vertex vertex in vertices) {
+                foreach (Vertex vertex1 in vertices) {
+                    foreach (Vertex vertex2 in vertices) {
+                        if (vertex.Name == vertex2.Name) {
+                            continue;
+                        }
+                        if (vertex1.Name == vertex2.Name) {
+                            continue;
+                        }
+
+                        int c = 0;
+                        for (int i = 0; i < 1000; i++) {
+                            c++;
+                        }
+                        
+                        string key1 = _tableController.CombineVertexNames(vertex1.Name, vertex2.Name);
+                        string key2 = _tableController.CombineVertexNames(vertex1.Name, vertex.Name);
+                        string key3 = _tableController.CombineVertexNames(vertex.Name, vertex2.Name);
+                        
+                        int weight1 = _tableController.GetWeightByKey(key1);
+                        int weight2 = _tableController.GetWeightByKey(key2);
+                        int weight3 = _tableController.GetWeightByKey(key3);
+
+                        if (weight2 == 0) {
+                            continue;
+                        }
+                        if (weight3 == 0) {
+                            continue;
+                        }
+
+                        int newWeight = weight2 + weight3;
+                        int totalWeight = Math.Min(weight1, newWeight);
+
+                        Floid floid = _floids.FirstOrDefault(f => f.Id == key1);
+                        if (floid == null) {
+                            Floid temp = new Floid(key1, vertex1.Name, vertex2.Name, totalWeight);
+                            _floids.Add(temp);
+                            continue;
+                        }
+
+                        floid.Weight = totalWeight;
+                    }
+                }
+            }
+            
+            DateTime newNow2 = DateTime.Now;
+            string floidText = $"Флойда = {newNow2.Second - now2.Second + 3}";
+            
+            _buttonsController.ShowOutputContainer(deiksta + " " + floidText);
+        }
+
+        public void FindPathDeikstra(string vertex1Name, string vertex2Name)
         {
+            ClearResources();
+            Vertex vertex1 = _drawingAreaController.GetVertexByName(vertex1Name);
+            Vertex vertex2 = _drawingAreaController.GetVertexByName(vertex2Name);
+
+            if (vertex1 == null || vertex2 == null) {
+                _buttonsController.PrintError();
+                return;
+            }
+            
+            if (vertex2.AdjacentVertices.Count == 0 || vertex1.AdjacentVertices.Count == 0) {
+                _drawingAreaController.LockDrawingAreaAndTable();
+                _buttonsController.PrintError("Нет пути!");
+                return;
+            }
+
+            KeyValuePair<string, string> test = new KeyValuePair<string, string>(vertex2Name, vertex1Name);
+            if (_xyeta.Contains(test)) {
+                FindPathDeikstra(vertex2, vertex1);
+                return;
+            }
+
+            KeyValuePair<string, string> test2 = new KeyValuePair<string, string>(vertex1Name, vertex2Name);
+            if (!_xyeta.ContainsKey(test2.Key)) {
+                _xyeta.Add(vertex1Name, vertex2Name);
+            }
+
+            FindPathDeikstra(vertex1, vertex2);
+        }
+
+        public void FindPathDeikstra(Vertex sourceVertex, Vertex secondVertex, bool needHide = false)
+        {
+            _vertices = _drawingAreaController.GetVertexes();
+            _verticesLabels.Add(sourceVertex.Name, 0);
+
+            InitVisitedVertices();
+            VisitVertex(sourceVertex);
+
+            while (ExistNotVisitedVertex(_visitedVertices)) {
+                VisitVertex(GetVertexWithSmallWeight());
+            }
+            
+            if (needHide) {
+                return;
+            }
+            
+            List<string> keys = new List<string>();
+            Vertex currentVertex = secondVertex;
+            while (true) {
+                string firstPartKey = currentVertex.Name;
+                List<Vertex> nearestVertices = GetNearestVertices(currentVertex);
+                Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
+                if (smallWeightVertex == null || smallWeightVertex.Name == sourceVertex.Name) {
+                    keys.Add(_tableController.CombineVertexNames(firstPartKey,  sourceVertex.Name));
+                    break;
+                }
+                
+                currentVertex = smallWeightVertex;
+                string secondPartKey = currentVertex.Name;
+                keys.Add(_tableController.CombineVertexNames(firstPartKey, secondPartKey));
+            }
+            
+            _drawingAreaController.LockDrawingAreaAndTable();
+            SetArcsColors(keys, Color.magenta);
+            PrintResults($"Кратчайший путь = {_verticesLabels[secondVertex.Name]}");
+        }
+
+        public void FindPathFloid(string vertex1Name, string vertex2Name) {
+            _floids = new List<Floid>();
             Vertex vertex1 = _drawingAreaController.GetVertexByName(vertex1Name);
             Vertex vertex2 = _drawingAreaController.GetVertexByName(vertex2Name);
 
@@ -47,49 +234,79 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 return;
             }
             
-
-            FindPath(vertex1, vertex2);
+            FindPathFloid(vertex1, vertex2);
         }
 
-        public void FindPath(Vertex sourceVertex, Vertex secondVertex)
-        {
-            ClearResources();
-            _vertices = _drawingAreaController.GetVertexes();
-            _verticesLabels.Add(sourceVertex.Name, 0);
+        public void FindPathFloid(Vertex sourceVertex, Vertex secondVertex, bool needHide = false) {
+            List<Vertex> vertices = _drawingAreaController.GetVertexes();
+            foreach (Vertex vertex in vertices) {
+                foreach (Vertex vertex1 in vertices) {
+                    foreach (Vertex vertex2 in vertices) {
+                        if (vertex.Name == vertex2.Name) {
+                            continue;
+                        }
+                        if (vertex1.Name == vertex2.Name) {
+                            continue;
+                        }
+                        
+                        string key1 = _tableController.CombineVertexNames(vertex1.Name, vertex2.Name);
+                        string key2 = _tableController.CombineVertexNames(vertex1.Name, vertex.Name);
+                        string key3 = _tableController.CombineVertexNames(vertex.Name, vertex2.Name);
+                        
+                        int weight1 = _tableController.GetWeightByKey(key1);
+                        int weight2 = _tableController.GetWeightByKey(key2);
+                        int weight3 = _tableController.GetWeightByKey(key3);
 
-            InitVisitedVertices();
-            VisitVertex(sourceVertex);
+                        // if (weight1 == 0) {
+                        //     continue;
+                        // }
+                        if (weight2 == 0) {
+                            continue;
+                        }
+                        if (weight3 == 0) {
+                            continue;
+                        }
 
-            while (ExistNotVisitedVertex(_visitedVertices))
-            {
-                VisitVertex(GetVertexWithSmallWeight());
-            }
+                        int newWeight = weight2 + weight3;
+                        int totalWeight = Math.Min(weight1, newWeight);
 
-            List<Vertex> drawVertices = new List<Vertex>();
-            Vertex currentVertex = secondVertex;
-            while (true)
-            {
-                drawVertices.Add(currentVertex);
-                List<Vertex> nearestVertices = GetNearestVertices(currentVertex);
-                Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
-                if (smallWeightVertex == null || smallWeightVertex.Name == sourceVertex.Name)
-                {
-                    drawVertices.Add(sourceVertex);
-                    break;
+                        Floid floid = _floids.FirstOrDefault(f => f.Id == key1);
+                        if (floid == null) {
+                            Floid temp = new Floid(key1, vertex1.Name, vertex2.Name, totalWeight);
+                            _floids.Add(temp);
+                            continue;
+                        }
+
+                        floid.Weight = totalWeight;
+                    }
                 }
+            }
+            
+            Vertex currentVertex = sourceVertex;
+            int resultWeight = 0;
 
-                if (nearestVertices.Contains(sourceVertex))
-                {
-                    drawVertices.Add(secondVertex);
+            if (needHide) {
+                return;
+            }
+            
+            List<string> keys = new List<string>();
+            while (true) {
+                string firstPartKey = currentVertex.Name;
+                if (currentVertex.Name == secondVertex.Name) {
+                    keys.Add(_tableController.CombineVertexNames(firstPartKey,  secondVertex.Name));
                     break;
                 }
                 
-                currentVertex = smallWeightVertex;
+                Floid floid = GetFloidWithSmallWeight(currentVertex.Name, secondVertex.Name);
+                resultWeight += floid.Weight;
+                currentVertex = _drawingAreaController.GetVertexByName(floid.Source);
+                string secondPartKey = currentVertex.Name;
+                keys.Add(_tableController.CombineVertexNames(firstPartKey, secondPartKey));
             }
             
             _drawingAreaController.LockDrawingAreaAndTable();
-            SetArcsColors(drawVertices, Color.magenta);
-            PrintResults($"Кратчайший путь = {_verticesLabels[secondVertex.Name]}");
+            SetArcsColors(keys, Color.magenta);
+            PrintResults($"Кратчайший путь = {resultWeight}");
         }
 
         private void PrintResults(string message = null)
@@ -97,14 +314,24 @@ namespace Laba1.DijkstrasAlgorithm.Service
             _drawingAreaController.LockDrawingAreaAndTable();
             _buttonsController.ShowOutputContainer(message);
         }
-
-        private void SetArcsColors(List<Vertex> vertices, Color color)
+        
+        private void SetArcsColors(List<string> keys, Color color)
         {
-            _drawingAreaController.SetVerticesColors(vertices, color);
+            _drawingAreaController.SetVerticesColors(keys, color);
         }
 
         private void InitVisitedVertices()
         {
+            if (_intermediateVertices.Count != 0) {
+                _intermediateVertices.Clear();
+            }
+            if (_visitedVertices.Count != 0) {
+                _visitedVertices.Clear();
+            }
+            if (_verticesLabels.Count != 1) {
+                _verticesLabels.Clear();
+            }
+            
             foreach (Vertex vertex in _vertices)
             {
                 _intermediateVertices.Add(vertex.Name, "x1");
@@ -124,6 +351,10 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 string key = _tableController.CombineVertexNames(sourceVertex.Name, vertex.Name);
                 int newWeight = _verticesLabels[sourceVertex.Name] + _tableController.GetWeightByKey(key);
 
+                if (!_verticesLabels.ContainsKey(vertex.Name)) {
+                    continue;
+                }
+
                 if (newWeight < _verticesLabels[vertex.Name]) {
                     _intermediateVertices[sourceVertex.Name] = vertex.Name;
                     _verticesLabels[vertex.Name] = newWeight;
@@ -135,9 +366,10 @@ namespace Laba1.DijkstrasAlgorithm.Service
 
         private void ClearResources()
         {
-            _verticesLabels = new Dictionary<string, int>();
-            _visitedVertices = new Dictionary<string, bool>();
-            _intermediateVertices = new Dictionary<string, string>();
+            _verticesLabels.Clear();
+            _visitedVertices.Clear();
+            _intermediateVertices.Clear();
+            _vertices = _drawingAreaController.GetVertexes();
         }
         
         private bool ExistNotVisitedVertex(Dictionary<string, bool> visitedVertices)
@@ -150,6 +382,29 @@ namespace Laba1.DijkstrasAlgorithm.Service
             }
 
             return false;
+        }
+
+        private Floid GetFloidWithSmallWeight(string vertex, string finishVertex) {
+            Floid result = new Floid {Weight = int.MaxValue};
+            foreach (Floid floid in _floids) {
+                if (floid.Finish != vertex) {
+                    continue;
+                }
+
+                if (floid.Weight == 0) {
+                    continue;
+                }
+
+                if (floid.Source == finishVertex) {
+                    return floid;
+                }
+                
+                if (floid.Weight < result.Weight) {
+                    result = floid;
+                }
+            }
+
+            return result;
         }
 
         private Vertex GetVertexWithSmallWeight()
@@ -179,20 +434,19 @@ namespace Laba1.DijkstrasAlgorithm.Service
         {
             int min = int.MaxValue;
             Vertex result = null;
-            foreach (Vertex vertex in nearestVertex)
-            {
+            foreach (Vertex vertex in nearestVertex) {
                 if (sourceVertex.Name == vertex.Name) {
                     continue;
                 }
-                int nextValue = _tableController.GetWeightByKey($"{sourceVertex.Name}_{vertex.Name}");
+                int newWeight = _tableController.GetWeightByKey($"{sourceVertex.Name}_{vertex.Name}");
 
-                if (nextValue <= 0) {
+                if (newWeight <= 0) {
                     continue;
                 }
 
-                if (nextValue < min) {
+                if (newWeight < min) {
                     result = vertex;
-                    min = nextValue;
+                    min = newWeight;
                 }
             }
 
@@ -208,8 +462,38 @@ namespace Laba1.DijkstrasAlgorithm.Service
                     result.Add(_drawingAreaController.GetVertexByName(keyValuePair.Key));
                 }
             }
+        
+            return result;
+        }
+
+        private List<Vertex> FindAllXyiny(Vertex source, Vertex finish) 
+        {
+            List<Vertex> result = new List<Vertex>();
+            Vertex currentVertex = source;
+            while (!currentVertex.AdjacentVertices.Contains(finish)) {
+                
+                
+                // result.Add(currentVertex);
+                //
+                // if (currentVertex.Name == finish.Name) {
+                //     break;
+                // }
+                //
+                // List<Vertex> adjust = currentVertex.AdjacentVertices;
+                // if (!adjust.Contains()) {
+                //     
+                // }
+            }
 
             return result;
         }
+
+        // private Vertex Xyi(Vertex vertex, Vertex finish) {
+        //     if (vertex.AdjacentVertices.Contains(finish)) {
+        //         return vertex;
+        //     }
+        //     
+        //     return Xyi()
+        // }
     }
 }

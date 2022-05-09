@@ -689,7 +689,9 @@ MonoBehaviour:
   _loadButton: {fileID: 8164322252961963101}
   _findPathButton: {fileID: 5311712513796707692}
   _exitButton: {fileID: 6115893361275499358}
+  _printTableButton: {fileID: 0}
   _findPathDialog: {fileID: 6595830945559999978, guid: 9d78dcf0680ff644aaf283e26dcc864f, type: 3}
+  _isLb2: 0
 --- !u!1 &2520167187592177662
 GameObject:
   m_ObjectHideFlags: 0
@@ -1566,7 +1568,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 300
+      value: 500
       objectReference: {fileID: 0}
     - target: {fileID: 45759961105923382, guid: 52b9112532a2bdf42a38c69174f2969f, type: 3}
       propertyPath: m_SizeDelta.y

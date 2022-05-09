@@ -46,7 +46,7 @@ namespace Laba1.Maths
         
         public bool CheckPositionCorrections(Vector2 position)
         {
-            return position.x > Screen.width * 0.45f;
+            return position.x > Screen.width * 0.45f && position.y > Screen.height * 0.15f;
         }
         
         public bool CheckDistanceBetweenEachOther(Vector2 position1, Vector2 position2, float minDistance)

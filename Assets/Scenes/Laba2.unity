@@ -455,6 +455,17 @@ RectTransform:
   m_CorrespondingSourceObject: {fileID: 4817739303724904704, guid: 81315234453c3ef4b95dc3ba8ee2aef8, type: 3}
   m_PrefabInstance: {fileID: 1185677239}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1185677241 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2632191240789894290, guid: 81315234453c3ef4b95dc3ba8ee2aef8, type: 3}
+  m_PrefabInstance: {fileID: 1185677239}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1852218216
 GameObject:
   m_ObjectHideFlags: 0
@@ -501,8 +512,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _canvas: {fileID: 293967853}
   _startDialog: {fileID: 678749692}
-  _mainDialog: {fileID: 2520167186817665274, guid: c76325668d32d5d4d856a4bb852c4f0b, type: 3}
+  _mainDialog: {fileID: 2520167186817665274, guid: 30f921d997e292a44aacf01ecfa8247d, type: 3}
   _inputField: {fileID: 607583779}
+  _exitButton: {fileID: 1185677241}
 --- !u!1 &2056704653
 GameObject:
   m_ObjectHideFlags: 0

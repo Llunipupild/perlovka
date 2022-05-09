@@ -395,6 +395,7 @@ MonoBehaviour:
   _startDialog: {fileID: 1153528799}
   _mainDialog: {fileID: 2520167186817665274, guid: c76325668d32d5d4d856a4bb852c4f0b, type: 3}
   _inputField: {fileID: 2037321082}
+  _exitButton: {fileID: 4817739304853078753}
 --- !u!114 &2037321082 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 4817739304469761946, guid: a52b74c8c39e0d84eb8843b3d44cd522, type: 3}
@@ -489,7 +490,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4817739303724904704, guid: a52b74c8c39e0d84eb8843b3d44cd522, type: 3}
       propertyPath: m_RootOrder
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4817739303724904704, guid: a52b74c8c39e0d84eb8843b3d44cd522, type: 3}
       propertyPath: m_AnchorMax.x
@@ -573,3 +574,14 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a52b74c8c39e0d84eb8843b3d44cd522, type: 3}
+--- !u!114 &4817739304853078753 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8139245959450267412, guid: a52b74c8c39e0d84eb8843b3d44cd522, type: 3}
+  m_PrefabInstance: {fileID: 4817739304853078752}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4e29b1a8efbd4b44bb3f3716e73f07ff, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

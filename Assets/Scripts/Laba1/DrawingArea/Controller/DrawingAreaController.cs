@@ -44,8 +44,9 @@ namespace Laba1.DrawingArea.Controller
         private Vector2 _endPositionNewArc;
         
         private bool _isCreateArc;
-        private bool _isBlock;
         private int _countVertex;
+        
+        public bool Blocked { get; private set; }
 
         private Dictionary<string, bool> _occupiedVertexesNames = new Dictionary<string, bool>
         {
@@ -76,7 +77,7 @@ namespace Laba1.DrawingArea.Controller
         
         private void Update()
         {
-            if (_isBlock)
+            if (Blocked)
             {
                 return;
             }
@@ -147,36 +148,27 @@ namespace Laba1.DrawingArea.Controller
                 _selectedArc = GetArcByMouseClick(Input.mousePosition);
                 _tableController.SetTableStatus(true);
                 _changeWeightDialogObject.SetActive(true);
-                _isBlock = true;
-            }
-
-            //перетаскивание вершины
-            if (Input.GetKey(KeyCode.Mouse0)) {
-                
+                Blocked = true;
             }
         }
         
-        public void SetVerticesColors(List<Vertex> vertices, Color color)
+        public void SetVerticesColors(List<string> vertices, Color color)
         {
-            foreach (Vertex vertex in vertices)
-            {
-                if (vertex == null) {
+            foreach (string vertex in vertices) {
+                Vertex vertex1 = GetVertexByName(_tableController.GetHalfString(vertex));
+                Vertex vertex2 = GetVertexByName(_tableController.GetHalfString(_tableController.ReverseKey(vertex)));
+                
+                Arc arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertex1.Name}{vertex2.Name}");
+                if (arc == null) {
+                    arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertex2.Name}{vertex1.Name}");
+                }
+
+                if (arc == null) {
                     continue;
                 }
-                
-                foreach (Vertex vertexAdjacentVertex in vertex.AdjacentVertices)
-                {
-                    if (vertices.Contains(vertexAdjacentVertex)) {
-                        Arc arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertex.Name}{vertexAdjacentVertex.Name}");
-                        if (arc == null) {
-                            arc = _arcs.FirstOrDefault(a => a.name == $"arc{vertexAdjacentVertex.Name}{vertex.Name}");
-                        }
 
-                        arc!.gameObject.GetComponent<Image>().color = color;
-                    }
-                }
+                arc!.gameObject.GetComponent<Image>().color = color;
             }
-            
         }
         
         public void CreateArc(string vertexName1, string vertexName2)
@@ -192,17 +184,14 @@ namespace Laba1.DrawingArea.Controller
         
         public void CreateArc(Vector2 startPosition, Vector2 endPosition, bool needUpdateTable = true)
         {
-            if (IsMaxArcCount())
-            {
+            if (IsMaxArcCount()) {
                 return;
             }
             List<Vertex> arcVertexes = FindArcVertexes(startPosition, endPosition);
-            if (arcVertexes[0] == null || arcVertexes[1] == null)
-            {
+            if (arcVertexes[0] == null || arcVertexes[1] == null) {
                 return;
             }
-            if (HasSuchArc(arcVertexes))
-            {
+            if (HasSuchArc(arcVertexes)) {
                 return;
             }
             
@@ -210,8 +199,7 @@ namespace Laba1.DrawingArea.Controller
             Arc arcComponent = arc.GetComponent<Arc>();
             SetArcParameters(arc, arcVertexes);
             _arcs.Add(arcComponent);
-            if (needUpdateTable)
-            {
+            if (needUpdateTable) {
                 _tableController.UpdateTable(arcComponent);
             }
             arcVertexes[0].AddAdjacentVertex(arcVertexes[1]);
@@ -221,25 +209,23 @@ namespace Laba1.DrawingArea.Controller
         public void DeleteArc(Vertex firstVertex, Vertex secondVertex)
         {
             Arc arc = _arcs.FirstOrDefault(a => a.FirstVertex == firstVertex && a.SecondVertex == secondVertex);
-            if (arc == null)
-            {
+            if (arc == null) {
                 arc = _arcs.FirstOrDefault(a => a.FirstVertex == secondVertex && a.SecondVertex == firstVertex);
             }
+            
             DeleteArc(arc);
         }
         
         public void DeleteArc(Arc arc, bool UpdateTable = true)
         {
-            if (arc == null)
-            {
+            if (arc == null) {
                 return;
             }
             
             arc.FirstVertex.RemoveArc(arc);
             arc.SecondVertex.RemoveArc(arc);
 
-            if (UpdateTable)
-            {
+            if (UpdateTable) {
                 _tableController.UpdateTable(arc, "");
             }
             
@@ -249,20 +235,16 @@ namespace Laba1.DrawingArea.Controller
         
         public void CreateVertex(Vector2 position, string vertexName = null)
         {
-            if (_vertexes.Count == _countVertex)
-            {
+            if (_vertexes.Count == _countVertex) {
                 return;
             }
-            if (!_mathematicalCalculations.CheckPositionCorrections(position))
-            {
+            if (!_mathematicalCalculations.CheckPositionCorrections(position)) {
                 return;
             }
-            if (GetArcByMouseClick(position) != null)
-            {
+            if (GetArcByMouseClick(position) != null) {
                 return;
             }
-            if (_vertexes.Exists(v => v.Name == vertexName))
-            {
+            if (_vertexes.Exists(v => v.Name == vertexName)) {
                 return;
             }
 
@@ -275,12 +257,10 @@ namespace Laba1.DrawingArea.Controller
         {
             foreach (Vertex vertex in _vertexes)
             {
-                if (vertex.Name == vertexName)
-                {
+                if (vertex.Name == vertexName) {
                     continue;   
                 }
-                if (_mathematicalCalculations.CheckDistanceBetweenEachOther(newPosition, vertex.GetPosition(), 150))
-                {
+                if (_mathematicalCalculations.CheckDistanceBetweenEachOther(newPosition, vertex.GetPosition(), 150)) {
                     return false;
                 }
             }
@@ -314,18 +294,17 @@ namespace Laba1.DrawingArea.Controller
         private void ChangeWeightArc(string text)
         {
             LockDrawingAreaAndTable();
-            if (text == string.Empty)
-            {
+            if (text == string.Empty) {
                 return;
             }
-            if (_selectedArc == null)
-            {
+            if (_selectedArc == null) {
                 UnlockDrawingAreaAndTable();
                 return;
             }
             
             _tableController.UpdateTable(_selectedArc, text);
             UnlockDrawingAreaAndTable();
+            _changeWeightInputField.text = string.Empty;
         }
         
         private void SetArcVertices(List<Vertex> arcVertexes, Arc arc)
@@ -376,8 +355,7 @@ namespace Laba1.DrawingArea.Controller
         private void DeleteVertex(Vertex vertex)
         {
             int arcsCount = vertex.Arcs.Count;
-            for (int i = 0; i < arcsCount; i++)
-            {
+            for (int i = 0; i < arcsCount; i++) {
                 DeleteArc(vertex.Arcs.First());
             }
             
@@ -388,14 +366,13 @@ namespace Laba1.DrawingArea.Controller
 
         public void LockDrawingAreaAndTable()
         {
-            _isBlock = true;
+            Blocked = true;
             _tableController.SetTableStatus(true);
         }
         
-        //todo здесь наверное чото сломал
         public void UnlockDrawingAreaAndTable()
         {
-            _isBlock = false;
+            Blocked = false;
             _changeWeightDialogObject.SetActive(false);
             _tableController.SetTableStatus(false);
         }
@@ -409,12 +386,10 @@ namespace Laba1.DrawingArea.Controller
         {
             foreach (Arc arc in _arcs)
             {
-                if(arc.FirstVertex == vertices[0] && arc.SecondVertex == vertices[1])
-                {
+                if(arc.FirstVertex == vertices[0] && arc.SecondVertex == vertices[1]) {
                     return true;
                 }
-                if (arc.FirstVertex == vertices[1] && arc.SecondVertex == vertices[0])
-                {
+                if (arc.FirstVertex == vertices[1] && arc.SecondVertex == vertices[0]) {
                     return true;
                 }
             }

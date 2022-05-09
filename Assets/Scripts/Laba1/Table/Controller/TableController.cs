@@ -111,7 +111,8 @@ namespace Laba1.Table.Controller
 
         public int GetWeightByKey(string key)
         {
-            int.TryParse(InputFields.FirstOrDefault(k => k.Key == key).Value.text, out int result);
+            string text = InputFields[key].text;
+            int.TryParse(text, out int result);
             return result;
         }
 
@@ -124,9 +125,11 @@ namespace Laba1.Table.Controller
         {
             Dictionary<string, string> dictionary = new Dictionary<string, string>();
 
-            foreach (KeyValuePair<string,InputField> keyValuePair in InputFields)
-            {
-                dictionary[keyValuePair.Key] = keyValuePair.Value.text;
+            foreach (KeyValuePair<string,InputField> keyValuePair in InputFields) {
+                if (dictionary.ContainsKey(keyValuePair.Key)) {
+                    continue;
+                }
+                dictionary.Add(keyValuePair.Key, keyValuePair.Value.text);
             }
 
             return dictionary;
@@ -221,6 +224,9 @@ namespace Laba1.Table.Controller
                     return;
                 }
                 
+                //todo хз
+                CreateGraph(keyValuePair.Key, secondKey);
+                
                 keyValuePair.Value.text = text;
                 InputFields[secondKey].text = text;
             }
@@ -233,7 +239,7 @@ namespace Laba1.Table.Controller
             obj.name = text.text;
         }
         
-        private void SetTableValue(Dictionary<string, string> dictionary, Dictionary<string, Vector2> positions)
+        private void SetTableValue(Dictionary<string, string> dictionary, Dictionary<string, Vector2>? positions)
         {
             foreach (KeyValuePair<string,string> inputField in dictionary)
             {
@@ -280,7 +286,7 @@ namespace Laba1.Table.Controller
             }
         }
         
-        private string ReverseKey(string key)
+        public string ReverseKey(string key)
         {
             string secondPart = string.Empty;
             string result = string.Empty;
@@ -303,7 +309,7 @@ namespace Laba1.Table.Controller
             return result + secondPart;
         }
 
-        private string GetHalfString(string key)
+        public string GetHalfString(string key)
         {
             string result = string.Empty;
             foreach (var symbol in key)

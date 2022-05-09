@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/MainScene.unity
+    guid: 546b08192de0883418fedfbada6e1fbe
+  - enabled: 1
     path: Assets/Scenes/Laba1.unity
     guid: 2cda990e2423bbf4892e6590ba056729
+  - enabled: 1
+    path: Assets/Scenes/Laba2.unity
+    guid: 5f7cbff98d23adf4791ae70d3ec72b9f
   m_configObjects: {}

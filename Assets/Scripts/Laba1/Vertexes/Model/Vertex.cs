@@ -18,8 +18,7 @@ namespace Laba1.Vertexes.Model
         private TableController _tableController;
 
         private Dictionary<string, int> _arcsWeigh = new Dictionary<string, int>();
-
-        private bool _isDrag;
+        
         public string Name { get; private set; }
         public float X { get; private set; }
         public float Y { get; private set; }
@@ -49,19 +48,13 @@ namespace Laba1.Vertexes.Model
 
         public void AddAdjacentVertex(Vertex vertex)
         {
-            Vertex vert = _adjacentVertices.FirstOrDefault(v => v.Name == vertex.Name);
-            if (vert != null) {
-                RemoveVertex(vert);
+            if (_adjacentVertices.Contains(vertex)) {
+                return;
             }
             
             _adjacentVertices.Add(vertex);
         }
-
-        public void RemoveVertex(Vertex vertex)
-        {
-            _adjacentVertices.Remove(vertex);
-        }
-
+        
         public void SetNewPosition(Vector2 position)
         {
             X = position.x;
@@ -76,36 +69,32 @@ namespace Laba1.Vertexes.Model
         
         public void OnBeginDrag(PointerEventData eventData)
         {
-            foreach (Arc arc in _arcs)
-            {
+            if (_drawingAreaController.Blocked) {
+                return;
+            }
+            
+            foreach (Arc arc in _arcs) {
                 string key = _tableController.CombineVertexNames(arc.FirstVertex.Name, Name);
                 _arcsWeigh.Add(arc.FirstVertex.Name == Name ? arc.SecondVertex.Name : arc.FirstVertex.Name, _tableController.GetWeightByKey(key));
             }
             
             int countArcs = _arcs.Count;
-            for (int i = 0; i < countArcs; i++)
-            {
+            for (int i = 0; i < countArcs; i++) {
                 _drawingAreaController.DeleteArc(_arcs.First(), false);
             }
-            
-            //_drawingAreaController.LockDrawingAreaAndTable();
         }
 
         public void OnDrag(PointerEventData eventData)
         {
-            if (eventData.pointerCurrentRaycast.gameObject == null)
-            {
+            if (eventData.pointerCurrentRaycast.gameObject == null) {
                 return;
             }
-            if (eventData.pointerCurrentRaycast.gameObject.GetComponent<Vertex>() == null)
-            {
+            if (eventData.pointerCurrentRaycast.gameObject.GetComponent<Vertex>() == null) {
                 return;
             }
 
             Vertex vertex = eventData.pointerCurrentRaycast.gameObject.GetComponent<Vertex>();
-            //метод в drawing area, который перебирает все вершины и через матемтаику сравнивает позиции
-            if (!_drawingAreaController.CanMoved(eventData.pointerCurrentRaycast.gameObject.transform.position, vertex.Name))
-            {
+            if (!_drawingAreaController.CanMoved(eventData.pointerCurrentRaycast.gameObject.transform.position, vertex.Name)) {
                 return;
             }
             
@@ -116,8 +105,7 @@ namespace Laba1.Vertexes.Model
         
         public void OnEndDrag(PointerEventData eventData)
         {
-            foreach (KeyValuePair<string, int> arc in _arcsWeigh)
-            {
+            foreach (KeyValuePair<string, int> arc in _arcsWeigh) {
                 _drawingAreaController.CreateArc(GetPosition(), _drawingAreaController.GetVertexByName(arc.Key).GetPosition(), false);
             }
             

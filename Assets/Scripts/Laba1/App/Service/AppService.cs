@@ -5,6 +5,7 @@ using Laba1.Maths;
 using Laba1.SaveAndLoad.Service;
 using Laba1.Table.Controller;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Laba1.App.Service
@@ -19,6 +20,8 @@ namespace Laba1.App.Service
         private GameObject _mainDialog;
         [SerializeField]
         private InputField _inputField;
+        [SerializeField] 
+        private Button _exitButton;
 
         private GameObject _mainDialogGameObject;
         public TableController TableController { get; private set; }
@@ -32,6 +35,13 @@ namespace Laba1.App.Service
         private void Start()
         {
             _inputField.onEndEdit.AddListener(StartApp);
+            _exitButton.onClick.AddListener(OnExitButton);
+        }
+
+        private void OnDestroy() 
+        {
+            _inputField.onEndEdit.RemoveListener(StartApp);
+            _exitButton.onClick.RemoveListener(OnExitButton);
         }
 
         public void Restart()
@@ -39,15 +49,18 @@ namespace Laba1.App.Service
             Destroy(_mainDialogGameObject);
             _startDialog.SetActive(true);
         }
+
+        private void OnExitButton() 
+        {
+            SceneManager.LoadScene("MainScene");
+        }
         
         private void StartApp(string arg)
         {
-            if (_inputField.text != string.Empty)
-            {
+            if (_inputField.text != string.Empty) {
                 CountVertex = int.Parse(_inputField.text);
             }
-            if (CountVertex >= 11 || CountVertex <= 1)
-            {
+            if (CountVertex >= 11 || CountVertex <= 1) {
                 return;
             }
             
