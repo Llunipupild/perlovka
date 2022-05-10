@@ -25,6 +25,9 @@ namespace Laba1.DijkstrasAlgorithm.Service
         private Dictionary<string, string> _xyeta2 = new Dictionary<string, string>();
         
         private List<Floid> _floids = new List<Floid>();
+
+        public bool NeedAgainCalculate { get; set; }
+        private bool _isFirst;
         
         public class Floid
         {
@@ -56,6 +59,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
             _verticesLabels = new Dictionary<string, int>();
             _visitedVertices = new Dictionary<string, bool>();
             _intermediateVertices = new Dictionary<string, string>();
+            _isFirst = true;
         }
 
         public void CompareAlghoritms() {
@@ -152,7 +156,6 @@ namespace Laba1.DijkstrasAlgorithm.Service
 
         public void FindPathDeikstra(string vertex1Name, string vertex2Name)
         {
-            ClearResources();
             Vertex vertex1 = _drawingAreaController.GetVertexByName(vertex1Name);
             Vertex vertex2 = _drawingAreaController.GetVertexByName(vertex2Name);
 
@@ -172,14 +175,25 @@ namespace Laba1.DijkstrasAlgorithm.Service
 
         public void FindPathDeikstra(Vertex sourceVertex, Vertex secondVertex, bool needHide = false)
         {
-            _vertices = _drawingAreaController.GetVertexes();
-            _verticesLabels.Add(sourceVertex.Name, 0);
+            if (NeedAgainCalculate || _isFirst) {
+                ClearResources();
+                
+                _isFirst = false;
+                NeedAgainCalculate = false;
+                
+                _vertices = _drawingAreaController.GetVertexes();
+                if (!_verticesLabels.ContainsKey(sourceVertex.Name)) {
+                    _verticesLabels.Add(sourceVertex.Name, 0);
+                } else {
+                    _verticesLabels[sourceVertex.Name] = 0;
+                }
+                
+                InitVisitedVertices();
+                VisitVertex(sourceVertex);
 
-            InitVisitedVertices();
-            VisitVertex(sourceVertex);
-
-            while (ExistNotVisitedVertex(_visitedVertices)) {
-                VisitVertex(GetVertexWithSmallWeight());
+                while (ExistNotVisitedVertex(_visitedVertices)) {
+                    VisitVertex(GetVertexWithSmallWeight());
+                }
             }
             
             if (needHide) {
@@ -192,13 +206,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 string firstPartKey = currentVertex.Name;
                 List<Vertex> nearestVertices = GetNearestVertices(currentVertex);
                 
-                Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
-                if (smallWeightVertex == null || smallWeightVertex.Name == sourceVertex.Name) {
-                    keys.Add(_tableController.CombineVertexNames(firstPartKey,  sourceVertex.Name));
-                    break;
-                }
-                
-                if (nearestVertices.Count == 0) {
+                if (nearestVertices.Count == 0 && !currentVertex.AdjacentVertices.Contains(sourceVertex)) {
                     keys = new List<string>();
                     Vertex currentVertex1 = sourceVertex;
                     while (true) {
@@ -218,8 +226,20 @@ namespace Laba1.DijkstrasAlgorithm.Service
                     
                     _drawingAreaController.LockDrawingAreaAndTable();
                     SetArcsColors(keys, Color.magenta);
-                    PrintResults($"Кратчайший путь = {_verticesLabels[secondVertex.Name]}");
+
+                    int result = _verticesLabels[secondVertex.Name];
+                    if (result == 0) {
+                        result = _verticesLabels[sourceVertex.Name];
+                    }
+                    
+                    PrintResults($"Кратчайший путь = {result}");
                     return;
+                }
+                
+                Vertex smallWeightVertex = GetVertexWithSmallWeight(nearestVertices, currentVertex);
+                if (smallWeightVertex == null || smallWeightVertex.Name == sourceVertex.Name) {
+                    keys.Add(_tableController.CombineVertexNames(firstPartKey,  sourceVertex.Name));
+                    break;
                 }
                 
                 currentVertex = smallWeightVertex;
@@ -332,6 +352,20 @@ namespace Laba1.DijkstrasAlgorithm.Service
         }
 
         private void InitVisitedVertices()
+        {
+            foreach (Vertex vertex in _vertices)
+            {
+                _intermediateVertices.Add(vertex.Name, "x1");
+                _visitedVertices.Add(vertex.Name, false);
+                if (_verticesLabels.ContainsKey(vertex.Name)) {
+                    continue;
+                }
+
+                _verticesLabels.Add(vertex.Name, int.MaxValue);
+            }
+        }
+
+        private void InitVisited() 
         {
             foreach (Vertex vertex in _vertices)
             {

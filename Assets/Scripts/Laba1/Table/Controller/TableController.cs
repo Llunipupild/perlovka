@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Laba1.App.Service;
 using Laba1.Arcs.Model;
+using Laba1.DijkstrasAlgorithm.Service;
 using Laba1.DrawingArea.Controller;
 using Laba1.Maths;
 using Laba1.Table.TableInputField;
@@ -41,6 +42,8 @@ namespace Laba1.Table.Controller
         private List<GameObject> _partsTable = new List<GameObject>();
         private DrawingAreaController _drawingAreaController = null!;
         private MathematicalCalculations _mathematicalCalculations = null!;
+        private FindPathService _findPathService = null!; 
+            
         private int _countVertex;
         public Dictionary<string, InputField> InputFields { get; private set; } = null!;
         
@@ -48,6 +51,7 @@ namespace Laba1.Table.Controller
         {
             _mathematicalCalculations = appService.MathematicalCalculations;
             _drawingAreaController = appService.DrawingAreaController;
+            _findPathService = appService.FindPathService;
             InputFields = new Dictionary<string, InputField>();
             CreateTable(appService.CountVertex);
         }
@@ -86,6 +90,8 @@ namespace Laba1.Table.Controller
             
             InputFields[inputFieldsKey1].text = arcWeight;
             InputFields[inputFieldsKey2].text = arcWeight;
+            
+            _findPathService.NeedAgainCalculate = true;
         }
 
         public void SetTableStatus(bool status)
@@ -178,8 +184,10 @@ namespace Laba1.Table.Controller
             }
         }
         
-        private void OnChangeTable(string text)
-        {
+        private void OnChangeTable(string text) {
+            
+            _findPathService.NeedAgainCalculate = true;
+            
             int.TryParse(text, out int value);
             if (value < 0)
             {
@@ -224,9 +232,7 @@ namespace Laba1.Table.Controller
                     return;
                 }
                 
-                //todo хз
                 CreateGraph(keyValuePair.Key, secondKey);
-                
                 keyValuePair.Value.text = text;
                 InputFields[secondKey].text = text;
             }
