@@ -37,6 +37,8 @@ namespace Laba1.Buttons
         [SerializeField] 
         private Button _infoButton;
         [SerializeField] 
+        private Button _infoButtonObject;
+        [SerializeField] 
         private GameObject _findPathDialog;
         [SerializeField] 
         private bool _isLb2;
@@ -88,12 +90,16 @@ namespace Laba1.Buttons
             _inputFieldVertex1.onEndEdit.AddListener(OnChangeInputFields);
             _inputFieldVertex2.onEndEdit.AddListener(OnChangeInputFields);
             
+            _infoButton.onClick.AddListener(OnInfoButtonClick);
+            _infoButtonObject.onClick.AddListener(OnInfoObjectClick);
+            
             _saveButton.onClick.AddListener(OnSaveButtonClick);
             _loadButton.onClick.AddListener(OnLoadButtonClick);
             _findPathButton.onClick.AddListener(OnFindPathButton);
             _exitButton.onClick.AddListener(OnExitButtonClick);
             _closeButton.onClick.AddListener(OnCloseButton);
             
+            _infoButtonObject.gameObject.SetActive(false);
             _findPathDialogObject.SetActive(false);
             _outputContainer.SetActive(false);
         }
@@ -103,6 +109,8 @@ namespace Laba1.Buttons
             _inputFieldVertex1.onEndEdit.RemoveListener(OnChangeInputFields);
             _inputFieldVertex2.onEndEdit.RemoveListener(OnChangeInputFields);
             
+            _infoButton.onClick.RemoveListener(OnInfoButtonClick);
+            _infoButtonObject.onClick.RemoveListener(OnInfoObjectClick);
             _saveButton.onClick.RemoveListener(OnSaveButtonClick);
             _loadButton.onClick.RemoveListener(OnLoadButtonClick);
             _findPathButton.onClick.RemoveListener(OnFindPathButton);
@@ -133,6 +141,18 @@ namespace Laba1.Buttons
             }
 
             _outputText.text = message;
+        }
+
+        private void OnInfoButtonClick() 
+        {
+            _infoButtonObject.gameObject.SetActive(true);
+            _drawingAreaController.LockDrawingAreaAndTable();
+        }
+
+        private void OnInfoObjectClick() 
+        {
+            _infoButtonObject.gameObject.SetActive(false);
+            _drawingAreaController.UnlockDrawingAreaAndTable();
         }
 
         private void OnSaveButtonClick()
