@@ -695,6 +695,8 @@ MonoBehaviour:
   _infoButton: {fileID: 7077042270444346153}
   _infoButtonObject: {fileID: 5092796007278419266}
   _findPathDialog: {fileID: 6595830945559999978, guid: 9d78dcf0680ff644aaf283e26dcc864f, type: 3}
+  _table: {fileID: 0}
+  _text: {fileID: 0}
   _isLb2: 0
 --- !u!1 &2520167187592177662
 GameObject:

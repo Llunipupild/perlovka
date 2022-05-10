@@ -22,6 +22,7 @@ namespace Laba1.DijkstrasAlgorithm.Service
         private Dictionary<string, bool> _visitedVertices;
         private Dictionary<string, string> _intermediateVertices;
         private List<Floid> _floids = new List<Floid>();
+        private List<Table> _tables = new List<Table>();
         
         public class Floid
         {
@@ -41,9 +42,23 @@ namespace Laba1.DijkstrasAlgorithm.Service
             public Floid() {
                 
             }
+            
         }
         
-
+        public class Table
+        {
+            public string Source { get;}
+            public string Finish { get;}
+            public string Path { get; set; }
+            public int LengthPath { get; set; }
+            
+            public Table(string source, string finish) 
+            {
+                Source = source;
+                Finish = finish;
+            }
+        }
+        
         public void Init(AppService appService)
         {
             _drawingAreaController = appService.DrawingAreaController;
@@ -135,6 +150,30 @@ namespace Laba1.DijkstrasAlgorithm.Service
             _buttonsController.ShowOutputContainer(deiksta + " " + floidText);
         }
 
+        public List<Table> FindAll() {
+            _tables = new List<Table>();
+            
+            List<Vertex> vertices = _drawingAreaController.GetVertexes();
+            if (vertices.Count == 0) {
+                _buttonsController.PrintError();
+                return null;
+            }
+
+            foreach (Vertex vertex in vertices) {
+                foreach (Vertex vertex1 in vertices) {
+                    if (vertex1.Name == vertex.Name) {
+                        continue;
+                    }
+
+                    Table table = new Table(vertex.Name, vertex1.Name);
+                    _tables.Add(table);
+                    FindPathDeikstra(vertex, vertex1, true);
+                }
+            }
+
+            return _tables;
+        }
+
         public void FindPathDeikstra(string vertex1Name, string vertex2Name)
         {
             Vertex vertex1 = _drawingAreaController.GetVertexByName(vertex1Name);
@@ -168,10 +207,6 @@ namespace Laba1.DijkstrasAlgorithm.Service
                 VisitVertex(GetVertexWithSmallWeight());
             }
             
-            if (needHide) {
-                return;
-            }
-            
             List<string> keys = new List<string>();
             Vertex currentVertex = secondVertex;
             string secondPartkey = string.Empty;
@@ -203,6 +238,30 @@ namespace Laba1.DijkstrasAlgorithm.Service
                     keys.Add(_tableController.CombineVertexNames(firstPartKey, secondPartkey));
                     break;
                 }
+            }
+
+            if (_tables.Count != 0) {
+                Table table = _tables.FirstOrDefault(t => t.Source == sourceVertex.Name && t.Finish == secondVertex.Name);
+                if (table != null) {
+                    table.LengthPath = _verticesLabels[secondVertex.Name];
+                    string path = string.Empty;
+                    keys.Reverse();
+                    foreach (string key in keys) {
+                        string vertex1 = _tableController.GetHalfString(key);
+                        string vertex2 = _tableController.GetHalfString(_tableController.ReverseKey(key));
+                        if (vertex1 == vertex2) {
+                            path += vertex1;
+                            continue;
+                        }
+                        path += "->" + vertex1;
+                    }
+                    
+                    table.Path = path;
+                }
+            }
+            
+            if (needHide) {
+                return;
             }
             
             _drawingAreaController.LockDrawingAreaAndTable();

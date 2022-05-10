@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using Laba1.App.Service;
 using Laba1.DijkstrasAlgorithm.Service;
 using Laba1.DrawingArea.Controller;
@@ -39,7 +40,13 @@ namespace Laba1.Buttons
         [SerializeField] 
         private Button _infoButtonObject;
         [SerializeField] 
+        private Button _exitButtonTable;
+        [SerializeField] 
         private GameObject _findPathDialog;
+        [SerializeField] 
+        private GameObject _table;
+        [SerializeField] 
+        private GameObject _text;
         [SerializeField] 
         private bool _isLb2;
 
@@ -85,6 +92,9 @@ namespace Laba1.Buttons
                 _compareButton.onClick.AddListener(OnCompareButtonClick);
                 _deikstraButton.onClick.AddListener(OnDeikstraClick);
                 _floidButton.onClick.AddListener(OnFloidCLick);
+                _printTableButton.onClick.AddListener(OnPrintTableButtonClick);
+                _exitButtonTable.onClick.AddListener(OnTableClick);
+                _table.SetActive(false);
             }
             
             _inputFieldVertex1.onEndEdit.AddListener(OnChangeInputFields);
@@ -124,6 +134,7 @@ namespace Laba1.Buttons
             _compareButton.onClick.RemoveListener(OnCompareButtonClick);
             _deikstraButton.onClick.RemoveListener(OnDeikstraClick);
             _floidButton.onClick.RemoveListener(OnFloidCLick);
+            _exitButtonTable.onClick.RemoveListener(OnTableClick);
         }
 
         public void PrintError(string message = "Некорректные данные")
@@ -153,6 +164,71 @@ namespace Laba1.Buttons
         {
             _infoButtonObject.gameObject.SetActive(false);
             _drawingAreaController.UnlockDrawingAreaAndTable();
+        }
+
+        private void OnTableClick() 
+        {
+            _drawingAreaController.UnlockDrawingAreaAndTable();
+            _table.gameObject.SetActive(false);
+            
+            //todo люди придмула функции и есть serializefeild, но мне надоела эта лаба
+            GameObject startContainer = GameObject.Find("StartContainer");
+            GameObject finishContainer = GameObject.Find("FinishContainer");
+            GameObject pathContainer = GameObject.Find("PathContainer");
+            GameObject pathLengthContainer = GameObject.Find("PathLengthContainer");
+
+            if (startContainer == null) {
+                return;
+            }
+            if (finishContainer == null) {
+                return;
+            }
+            if (pathContainer == null) {
+                return;
+            }
+            if (pathLengthContainer == null) {
+                return;
+            }
+
+            List<GameObject> childs = new List<GameObject>();
+            for (int i = 0; i < startContainer.transform.childCount; i++) {
+                childs.Add(startContainer.transform.GetChild(i).gameObject);
+            }
+
+            int childCount = childs.Count;
+            for (int i = 0; i < childCount; i++) {
+                Destroy(childs.First());
+            }
+            
+            childs = new List<GameObject>();
+            for (int i = 0; i < finishContainer.transform.childCount; i++) {
+                childs.Add(finishContainer.transform.GetChild(i).gameObject);
+            }
+
+            childCount = childs.Count;
+            for (int i = 0; i < childCount; i++) {
+                Destroy(childs.First());
+            }
+            
+            childs = new List<GameObject>();
+            for (int i = 0; i < pathContainer.transform.childCount; i++) {
+                childs.Add(pathContainer.transform.GetChild(i).gameObject);
+            }
+
+            childCount = childs.Count;
+            for (int i = 0; i < childCount; i++) {
+                Destroy(childs.First());
+            }
+            
+            childs = new List<GameObject>();
+            for (int i = 0; i < pathLengthContainer.transform.childCount; i++) {
+                childs.Add(pathLengthContainer.transform.GetChild(i).gameObject);
+            }
+
+            childCount = childs.Count;
+            for (int i = 0; i < childCount; i++) {
+                Destroy(childs.First());
+            }
         }
 
         private void OnSaveButtonClick()
@@ -210,10 +286,38 @@ namespace Laba1.Buttons
         }
 
         private void OnPrintTableButtonClick() {
+            _drawingAreaController.LockDrawingAreaAndTable();
+            List<FindPathService.Table> result = _findPathService.FindAll();
+            _table.SetActive(true);
             
+            if (result == null) {
+                _table.SetActive(false);
+                _drawingAreaController.UnlockDrawingAreaAndTable();
+                return;
+            }
+            
+            GameObject startContainer = GameObject.Find("StartContainer");
+            GameObject finishContainer = GameObject.Find("FinishContainer");
+            GameObject pathContainer = GameObject.Find("PathContainer");
+            GameObject pathLengthContainer = GameObject.Find("PathLengthContainer");
+
+            foreach (FindPathService.Table table in result) {
+                GameObject start = Instantiate(_text, startContainer.transform);
+                start.GetComponent<TextMeshProUGUI>().text = table.Source;
+                
+                GameObject finish = Instantiate(_text, finishContainer.transform);
+                finish.GetComponent<TextMeshProUGUI>().text = table.Finish;
+                
+                GameObject path = Instantiate(_text, pathContainer.transform);
+                path.GetComponent<TextMeshProUGUI>().text = table.Path;
+                
+                GameObject lengthPath = Instantiate(_text, pathLengthContainer.transform);
+                lengthPath.GetComponent<TextMeshProUGUI>().text = table.LengthPath.ToString();
+            }
         }
 
-        private void OnDeikstraClick() {
+        private void OnDeikstraClick() 
+        {
             if (_inputFieldVertex1.text == string.Empty || _inputFieldVertex2.text == string.Empty) {
                 return;
             }
