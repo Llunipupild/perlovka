@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Laba1.App.Service;
 using Laba1.DijkstrasAlgorithm.Service;
 using Laba1.DrawingArea.Controller;
@@ -35,6 +34,8 @@ namespace Laba1.Buttons
         private Button _exitButton;
         [SerializeField] 
         private Button _printTableButton;
+        [SerializeField] 
+        private Button _infoButton;
         [SerializeField] 
         private GameObject _findPathDialog;
         [SerializeField] 
